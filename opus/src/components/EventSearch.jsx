@@ -3,6 +3,7 @@ import { Search, Bell, MapPin, SlidersHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEvents } from '../context/EventContext';
 import PageTransition from './PageTransition';
+import './SearchInput.css';
 
 const CATEGORIES = ["Tout", "Sorties", "Musée", "Sport", "Rando", "Danse", "Verre"];
 
@@ -58,15 +59,16 @@ const EventSearch = () => {
                     </div>
 
                     <div style={{
-                        background: 'white',
+                        background: 'rgba(255,255,255,0.15)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255,255,255,0.2)',
                         borderRadius: '20px',
                         padding: '12px 16px',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '12px',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
                     }}>
-                        <Search size={20} color="#9ca3af" />
+                        <Search size={20} color="rgba(255,255,255,0.8)" />
                         <input
                             type="text"
                             placeholder="Rechercher un événement..."
@@ -75,11 +77,14 @@ const EventSearch = () => {
                                 outline: 'none',
                                 flex: 1,
                                 fontSize: '15px',
-                                color: '#1f2937'
+                                background: 'transparent',
+                                color: 'white',
+                                '::placeholder': { color: 'rgba(255,255,255,0.6)' }
                             }}
+                            className="search-input-placeholder-white"
                         />
                         <button style={{
-                            background: '#f3f4f6',
+                            background: 'rgba(255,255,255,0.2)',
                             borderRadius: '50%',
                             width: '32px',
                             height: '32px',
@@ -89,7 +94,7 @@ const EventSearch = () => {
                             border: 'none',
                             cursor: 'pointer'
                         }}>
-                            <SlidersHorizontal size={16} color="#4b5563" />
+                            <SlidersHorizontal size={16} color="white" />
                         </button>
                     </div>
                 </div>
@@ -98,7 +103,6 @@ const EventSearch = () => {
                 <div style={{ padding: '0 0 24px 24px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingRight: '24px', marginBottom: '16px' }}>
                         <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#18181b' }}>Tendance cette semaine 🔥</h2>
-                        <span style={{ fontSize: '12px', color: '#d946ef', fontWeight: '600' }}>Voir tout</span>
                     </div>
 
                     <div style={{
