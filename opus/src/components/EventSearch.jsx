@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Bell, MapPin } from 'lucide-react';
+import { Search, Bell, MapPin, SlidersHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEvents } from '../context/EventContext';
 import PageTransition from './PageTransition';
@@ -18,68 +18,157 @@ const EventSearch = () => {
         <PageTransition>
             <div style={{ minHeight: '100vh', background: '#f9f9f9', paddingBottom: '100px' }}>
 
-                {/* 1. Top Header */}
-                <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ background: '#ef4444', borderRadius: '50%', padding: '6px', display: 'flex' }}>
-                            <MapPin size={16} color="white" fill="white" />
-                        </div>
+                {/* NEW HEADER */}
+                <div style={{
+                    flexShrink: 0,
+                    background: 'linear-gradient(135deg, #73f755ff 0%, #4649efff 50%, #ec4899 100%)', // Purple to Pink gradient
+                    padding: '12px 24px 24px',
+                    borderBottomLeftRadius: '30px',
+                    borderBottomRightRadius: '30px',
+                    color: 'white',
+                    boxShadow: '0 10px 30px rgba(217, 70, 239, 0.2)',
+                    zIndex: 10,
+                    marginBottom: '12px'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                         <div>
-                            <div style={{ fontSize: '12px', color: '#a1a1aa' }}>Localisation</div>
-                            <div style={{ fontWeight: '700', color: '#18181b' }}>Paris, France</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', opacity: 0.9, marginBottom: '4px' }}>
+                                <MapPin size={14} color="white" />
+                                <span style={{ fontSize: '12px', fontWeight: '500' }}>Événements autour de moi</span>
+                            </div>
+                            <h1 style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '-0.5px' }}>Paris, France</h1>
                         </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        <button style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <Search size={20} color="#18181b" />
+                        <button style={{
+                            background: 'rgba(255,255,255,0.2)',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(255,255,255,0.3)',
+                            borderRadius: '50%',
+                            width: '44px',
+                            height: '44px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer'
+                        }}>
+                            <div style={{ position: 'relative' }}>
+                                <Bell size={20} color="white" />
+                                <div style={{ position: 'absolute', top: 0, right: 0, width: '8px', height: '8px', background: '#facc15', borderRadius: '50%', border: '2px solid #d946ef' }}></div>
+                            </div>
                         </button>
-                        <button style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                            <Bell size={20} color="#18181b" />
-                        </button>
                     </div>
-                </div>
 
-                {/* 2. Hero Banner (Green from screenshot) */}
-                <div style={{ padding: '0 24px', marginBottom: '24px' }}>
                     <div style={{
-                        background: 'linear-gradient(135deg, #84cc16 0%, #22c55e 100%)', // Lime to Green gradient
-                        borderRadius: '24px',
-                        padding: '24px',
-                        position: 'relative',
-                        height: '160px',
+                        background: 'white',
+                        borderRadius: '20px',
+                        padding: '12px 16px',
                         display: 'flex',
                         alignItems: 'center',
-                        overflow: 'hidden',
-                        boxShadow: '0 10px 20px rgba(34, 197, 94, 0.2)'
+                        gap: '12px',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
                     }}>
-                        <div style={{ width: '55%', zIndex: 1 }}>
-                            <div style={{ background: '#f97316', color: 'white', fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '12px', width: 'fit-content', marginBottom: '8px' }}>
-                                A NE PAS MANQUER
-                            </div>
-                            <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '800', lineHeight: '1.2', marginBottom: '8px' }}>
-                                Soirée Spéciale Été 2026
-                            </h2>
-                            <button style={{ background: 'white', color: '#22c55e', border: 'none', padding: '8px 16px', borderRadius: '20px', fontWeight: '700', fontSize: '12px' }}>
-                                Voir l'offre
-                            </button>
-                        </div>
-                        {/* Hero Image */}
-                        <div style={{ position: 'absolute', right: '-20px', top: '0', height: '100%', width: '60%' }}>
-                            <img
-                                src="https://images.unsplash.com/photo-1533174072545-e8d4aa97edf9?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                                alt="Event"
-                                style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'rotate(-5deg) scale(1.2)' }}
-                            />
-                        </div>
+                        <Search size={20} color="#9ca3af" />
+                        <input
+                            type="text"
+                            placeholder="Rechercher un événement..."
+                            style={{
+                                border: 'none',
+                                outline: 'none',
+                                flex: 1,
+                                fontSize: '15px',
+                                color: '#1f2937'
+                            }}
+                        />
+                        <button style={{
+                            background: '#f3f4f6',
+                            borderRadius: '50%',
+                            width: '32px',
+                            height: '32px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: 'none',
+                            cursor: 'pointer'
+                        }}>
+                            <SlidersHorizontal size={16} color="#4b5563" />
+                        </button>
                     </div>
                 </div>
 
+                {/* 2. Trending Carousel */}
+                <div style={{ padding: '0 0 24px 24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingRight: '24px', marginBottom: '16px' }}>
+                        <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#18181b' }}>Tendance cette semaine 🔥</h2>
+                        <span style={{ fontSize: '12px', color: '#d946ef', fontWeight: '600' }}>Voir tout</span>
+                    </div>
+
+                    <div style={{
+                        display: 'flex',
+                        gap: '16px',
+                        overflowX: 'auto',
+                        paddingRight: '24px',
+                        paddingBottom: '8px',
+                        scrollbarWidth: 'none',
+                        msOverflowStyle: 'none'
+                    }}>
+                        {events.slice(0, 5).map((event, i) => (
+                            <div
+                                key={i}
+                                onClick={() => navigate(`/event/${event.id}`)}
+                                style={{
+                                    flexShrink: 0,
+                                    width: '280px',
+                                    height: '180px',
+                                    borderRadius: '24px',
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                    boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
+                                    scrollSnapAlign: 'start'
+                                }}
+                            >
+                                <img
+                                    src={event.image}
+                                    alt={event.title}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '12px',
+                                    right: '12px',
+                                    background: 'rgba(255,255,255,0.3)',
+                                    backdropFilter: 'blur(8px)',
+                                    borderRadius: '50%',
+                                    width: '32px',
+                                    height: '32px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}>
+                                    <Bell size={16} color="white" fill="white" />
+                                </div>
+                                <div style={{
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    left: 0,
+                                    right: 0,
+                                    padding: '16px',
+                                    background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)'
+                                }}>
+                                    <h3 style={{ color: 'white', fontWeight: '700', fontSize: '16px', marginBottom: '4px' }}>{event.title}</h3>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <MapPin size={12} color="#d1d5db" />
+                                        <span style={{ color: '#d1d5db', fontSize: '12px' }}>{event.location.split(',')[0]}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
                 {/* 3. Categories List */}
                 <div style={{
                     display: 'flex',
                     gap: '12px',
                     overflowX: 'auto',
-                    padding: '0 24px 24px',
+                    padding: '0 24px 16px',
                     scrollbarWidth: 'none',
                     msOverflowStyle: 'none'
                 }}>
@@ -121,7 +210,7 @@ const EventSearch = () => {
                                 onClick={() => navigate(`/event/${event.id}`)}
                                 style={{
                                     breakInside: 'avoid',
-                                    marginBottom: '16px',
+                                    marginBottom: '12px',
                                     position: 'relative',
                                     borderRadius: '20px',
                                     overflow: 'hidden',
@@ -160,7 +249,7 @@ const EventSearch = () => {
                                             <span style={{ fontSize: '10px', color: '#71717a' }}>{event.location.split(',')[0]}</span>
                                         </div>
                                         <div style={{ fontSize: '12px', fontWeight: '800', color: '#f97316' }}>
-                                            10€
+                                            {event.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                                         </div>
                                     </div>
                                 </div>
