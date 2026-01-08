@@ -1,6 +1,6 @@
 import React from 'react';
 import { useEvents, getDays } from '../context/EventContext';
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import useSwipe from '../hooks/useSwipe';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -12,6 +12,16 @@ const CalendarStrip = () => {
 
     // Toggle view function
     const toggleView = () => setWeekly(!isWeekly);
+
+    // Handle Drag for Expand/Collapse
+    const handleDragEnd = (event, info) => {
+        const swipeThreshold = 50;
+        if (info.offset.y > swipeThreshold && isWeekly) {
+            setWeekly(false); // Drag Down -> Open Month
+        } else if (info.offset.y < -swipeThreshold && !isWeekly) {
+            setWeekly(true); // Drag Up -> Close to Week
+        }
+    };
 
     return (
         <div
@@ -86,7 +96,6 @@ const CalendarStrip = () => {
                                     key={index}
                                     onClick={async () => {
                                         await setSelectedDate(date);
-                                        // Optional: Auto fold or not? User might want to keep calendar open.
                                     }}
                                     style={{
                                         display: 'flex',
@@ -135,18 +144,21 @@ const CalendarStrip = () => {
                 </AnimatePresence>
             </motion.div>
 
-            {/* Pull Handle for Smooth Unfold */}
-            <div
+            {/* Pull Handle for Smooth Unfold - Draggable */}
+            <motion.div
+                drag="y"
+                dragConstraints={{ top: 0, bottom: 0 }}
+                dragElastic={0.2}
+                onDragEnd={handleDragEnd}
                 onClick={toggleView}
                 style={{
                     display: 'flex',
                     justifyContent: 'center',
-                    padding: '8px 0 12px',
-                    cursor: 'pointer',
-                    opacity: 0.5,
-                    transition: 'opacity 0.2s'
+                    padding: '12px 0 16px', // Increased touch area
+                    cursor: 'grab',
+                    touchAction: 'none' // Important for drag
                 }}
-                className="hover:opacity-100 active:scale-110 transition-transform"
+                whileTap={{ cursor: 'grabbing' }}
             >
                 <div style={{
                     width: '40px',
@@ -155,7 +167,7 @@ const CalendarStrip = () => {
                     borderRadius: '10px'
                 }}
                 />
-            </div>
+            </motion.div>
         </div>
     );
 };
