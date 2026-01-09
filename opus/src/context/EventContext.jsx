@@ -2,86 +2,55 @@ import React, { createContext, useContext, useState } from 'react';
 
 const EventContext = createContext();
 
-const INITIAL_EVENTS = [
-    {
-        id: 1,
-        title: "Soirée Jeux de Société",
-        image: "https://picsum.photos/800/600?random=1",
-        date: new Date(2026, 0, 6), // Jan 06 2026
-        time: "19:00",
-        location: "Le Bar à Jeux, Paris",
-        attendees: 12,
-        description: "Une soirée détendue pour découvrir les nouveaux jeux du moment. Débutants bienvenus !",
-        registered: true,
-        isOrganizer: true, // Mock: I am the organizer of this event
-        price: 15 // Mock price
-    },
-    {
-        id: 2,
-        title: "Randonnée Urbaine",
-        image: "https://picsum.photos/800/600?random=2",
-        date: new Date(2026, 0, 8), // Jan 08 2026
-        time: "14:00",
-        location: "Départ Bastille",
-        attendees: 24,
-        description: "Redécouvrez Paris à pied à travers un parcours insolite de 10km.",
-        registered: false,
-        isOrganizer: false,
-        price: 0 // Free event
-    },
-    {
-        id: 3,
-        title: "Atelier Cuisine Italienne",
-        image: "https://picsum.photos/800/600?random=3",
-        date: new Date(2026, 0, 10), // Jan 10 2026
-        time: "18:30",
-        location: "Chez Luigi",
-        attendees: 6,
-        description: "Apprenez à faire vos propres pâtes fraîches avec un chef italien.",
-        registered: true,
-        isOrganizer: false,
-        price: 45
-    },
-    {
-        id: 4,
-        title: "Yoga au Parc",
-        image: "https://picsum.photos/800/600?random=4",
-        date: new Date(2026, 0, 15), // Jan 15 2026
-        time: "10:00",
-        location: "Parc des Buttes Chaumont",
-        attendees: 15,
-        description: "Séance de yoga en plein air pour tous niveaux.",
-        registered: false,
-        isOrganizer: false,
-        price: 10
-    },
-    {
-        id: 5,
-        title: "Conférence Tech",
-        image: "https://picsum.photos/800/600?random=5",
-        date: new Date(2026, 0, 20), // Jan 20 2026
-        time: "19:00",
-        location: "Station F",
-        attendees: 50,
-        description: "Découvrez les dernières tendances en matière d'IA et de développement web.",
-        registered: false,
-        isOrganizer: false,
-        price: 150
-    },
-    {
-        id: 6,
-        title: "Afterwork Salsa",
-        image: "https://picsum.photos/800/600?random=6",
-        date: new Date(2026, 0, 22), // Jan 22 2026
-        time: "20:00",
-        location: "La Pachanga",
-        attendees: 30,
-        description: "Initiation gratuite suivie d'une soirée dansante.",
-        registered: false,
-        isOrganizer: false,
-        price: 12
-    }
+// Générateur de données massives pour tester la scalabilité
+const EVENT_TITLES = [
+    "Soirée Jeux de Société", "Randonnée Urbaine", "Atelier Cuisine Italienne", "Yoga au Parc",
+    "Conférence Tech", "Afterwork Salsa", "Cours de Peinture", "Dégustation de Vins",
+    "Session Photo", "Tournoi d'Échecs", "Karaoké Night", "Brunch Networking",
+    "Atelier Poterie", "Concert Jazz", "Cours de Danse", "Méditation Guidée",
+    "Escape Game", "Soirée Cinéma", "Cours de Yoga", "Atelier Écriture",
+    "Running Club", "Cours de Guitare", "Soirée Trivia", "Atelier DIY",
+    "Visite Musée", "Cours de Boxe", "Soirée Poker", "Atelier Cocktails"
 ];
+
+const LOCATIONS = [
+    "Le Bar à Jeux, Paris", "Parc des Buttes Chaumont", "Station F", "La Pachanga",
+    "Café de Flore", "Le Marais", "Montmartre", "Bastille", "République",
+    "Belleville", "Oberkampf", "Nation", "Châtelet", "Saint-Germain"
+];
+
+const TIMES = ["08:00", "09:30", "10:00", "11:00", "12:30", "14:00", "15:30", "17:00", "18:30", "19:00", "20:00", "21:00"];
+
+// Génère ~30 événements par jour pour tout janvier 2026 (31 jours * ~30 = ~930 événements)
+const generateMassiveEvents = () => {
+    const events = [];
+    let id = 1;
+    
+    for (let day = 1; day <= 31; day++) {
+        const eventsPerDay = 25 + Math.floor(Math.random() * 15); // 25-40 événements par jour
+        
+        for (let i = 0; i < eventsPerDay; i++) {
+            events.push({
+                id: id++,
+                title: EVENT_TITLES[Math.floor(Math.random() * EVENT_TITLES.length)] + ` #${id}`,
+                image: `https://picsum.photos/800/600?random=${id}`,
+                date: new Date(2026, 0, day),
+                time: TIMES[Math.floor(Math.random() * TIMES.length)],
+                location: LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)],
+                attendees: Math.floor(Math.random() * 100) + 5,
+                description: `Événement passionnant du ${day} janvier. Rejoignez-nous pour une expérience unique !`,
+                registered: Math.random() > 0.7, // 30% de chance d'être inscrit
+                isOrganizer: Math.random() > 0.9, // 10% de chance d'être organisateur
+                price: Math.random() > 0.3 ? Math.floor(Math.random() * 150) + 5 : 0,
+                favorite: Math.random() > 0.85 // 15% de chance d'être en favoris
+            });
+        }
+    }
+    
+    return events;
+};
+
+const INITIAL_EVENTS = generateMassiveEvents();
 
 export const EventProvider = ({ children }) => {
     const [events, setEvents] = useState(INITIAL_EVENTS);
@@ -96,6 +65,16 @@ export const EventProvider = ({ children }) => {
         setEvents(events.map(e =>
             e.id === eventId ? { ...e, registered: !e.registered } : e
         ));
+    };
+
+    const toggleFavorite = (eventId) => {
+        setEvents(events.map(e =>
+            e.id === eventId ? { ...e, favorite: !e.favorite } : e
+        ));
+    };
+
+    const getFavoriteEvents = () => {
+        return events.filter(e => e.favorite).sort((a, b) => a.date - b.date);
     };
 
     const getEventsForDate = (date) => {
@@ -134,6 +113,8 @@ export const EventProvider = ({ children }) => {
             getEventsForDate,
             hasEventOnDate,
             toggleRegistration,
+            toggleFavorite,
+            getFavoriteEvents,
             eventCounts
         }}>
             {children}

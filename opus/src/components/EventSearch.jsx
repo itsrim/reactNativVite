@@ -3,6 +3,7 @@ import { Search, Bell, MapPin, SlidersHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEvents } from '../context/EventContext';
 import PageTransition from './PageTransition';
+import BlurImage from './BlurImage';
 import './SearchInput.css';
 
 const CATEGORIES = ["Tout", "Sorties", "Musée", "Sport", "Rando", "Danse", "Verre"];
@@ -129,10 +130,9 @@ const EventSearch = () => {
                                     scrollSnapAlign: 'start'
                                 }}
                             >
-                                <img
+                                <BlurImage
                                     src={event.image}
                                     alt={event.title}
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 />
                                 <div style={{
                                     position: 'absolute',
@@ -207,10 +207,9 @@ const EventSearch = () => {
                                     boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
                                 }}
                             >
-                                <img
+                                <BlurImage
                                     src={event.image}
                                     alt={event.title}
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 />
 
                                 {/* Overlay Card at Bottom */}

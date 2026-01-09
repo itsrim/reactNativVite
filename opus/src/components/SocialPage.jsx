@@ -1,7 +1,8 @@
 import React from 'react';
 import { Virtuoso } from 'react-virtuoso';
-import { MessageCircle, Heart, Search } from 'lucide-react';
+import { MessageCircle, Heart, Search, Users, Sparkles } from 'lucide-react';
 import PageTransition from './PageTransition';
+import BlurImage from './BlurImage';
 import { useNavigate } from 'react-router-dom';
 
 const FRIENDS = [
@@ -14,21 +15,23 @@ const FRIENDS = [
     { id: 7, name: 'Emma', image: 'https://i.pravatar.cc/150?img=16', msg: 0 },
 ];
 
-const SUGGESTIONS = Array.from({ length: 50 }, (_, i) => ({
+// 1000 profils pour tester la virtualisation et la scalabilité
+const FIRST_NAMES = [
+    'Maya', 'Nancy', 'Kat', 'Stacey', 'Zoe', 'Lily', 'Rose', 'Emma', 'Sophie', 'Clara',
+    'Léa', 'Manon', 'Chloé', 'Camille', 'Sarah', 'Laura', 'Julie', 'Marie', 'Anna', 'Eva',
+    'Jade', 'Louise', 'Alice', 'Lola', 'Inès', 'Léna', 'Lucie', 'Nina', 'Mia', 'Zoé',
+    'Lucas', 'Hugo', 'Louis', 'Nathan', 'Gabriel', 'Jules', 'Adam', 'Raphaël', 'Arthur', 'Léo',
+    'Noah', 'Ethan', 'Paul', 'Tom', 'Mathis', 'Théo', 'Maxime', 'Alexandre', 'Antoine', 'Victor'
+];
+
+const SUGGESTIONS = Array.from({ length: 1000 }, (_, i) => ({
     id: i,
-    name: ['Maya', 'Nancy', 'Kat', 'Stacey', 'Zoe', 'Lily', 'Rose'][i % 7],
-    age: 20 + (i % 10),
-    image: [
-        'https://i.pravatar.cc/600?img=20',
-        'https://i.pravatar.cc/600?img=21',
-        'https://i.pravatar.cc/600?img=22',
-        'https://i.pravatar.cc/600?img=23',
-        'https://i.pravatar.cc/600?img=24',
-        'https://i.pravatar.cc/600?img=25'
-    ][i % 6],
-    height: i % 2 === 0 ? 280 : 220,
-    rotation: (Math.random() - 0.5) * 12, // Random rotation between -6 and 6 degrees
-    offset: Math.random() * 40 // Random top offset between 0 and 40px
+    name: FIRST_NAMES[i % FIRST_NAMES.length],
+    age: 18 + (i % 20), // Ages entre 18 et 37
+    image: `https://i.pravatar.cc/600?img=${(i % 70) + 1}`, // 70 images différentes en rotation
+    height: 200 + (i % 5) * 30, // Heights variées: 200, 230, 260, 290, 320
+    rotation: ((i * 7) % 13) - 6, // Rotation déterministe entre -6 et 6
+    offset: (i * 11) % 45 // Offset déterministe entre 0 et 44px
 }));
 
 const MESSAGES = [
@@ -67,10 +70,9 @@ const SocialPage = () => {
                             marginTop: `${item.offset}px`,
                         }}
                     >
-                        <img
+                        <BlurImage
                             src={item.image}
                             alt={item.name}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                         <div style={{
                             position: 'absolute',
@@ -142,16 +144,17 @@ const SocialPage = () => {
                                         padding: '2px',
                                         background: friend.msg > 0 ? 'linear-gradient(45deg, #f97316, #ec4899)' : 'transparent'
                                     }}>
-                                        <img
-                                            src={friend.image}
-                                            alt={friend.name}
-                                            style={{
-                                                width: '100%', height: '100%',
-                                                borderRadius: '50%',
-                                                objectFit: 'cover',
-                                                border: '2px solid white'
-                                            }}
-                                        />
+                                        <div style={{
+                                            width: '100%', height: '100%',
+                                            borderRadius: '50%',
+                                            overflow: 'hidden',
+                                            border: '2px solid white'
+                                        }}>
+                                            <BlurImage
+                                                src={friend.image}
+                                                alt={friend.name}
+                                            />
+                                        </div>
                                     </div>
                                     {friend.msg > 0 && (
                                         <div style={{
@@ -225,11 +228,12 @@ const SocialPage = () => {
                                 {MESSAGES.map(msg => (
                                     <div key={msg.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px', cursor: 'pointer' }}>
                                         <div style={{ position: 'relative' }}>
-                                            <img
-                                                src={msg.image}
-                                                alt={msg.name}
-                                                style={{ width: '56px', height: '56px', borderRadius: '50%', objectFit: 'cover' }}
-                                            />
+                                            <div style={{ width: '56px', height: '56px', borderRadius: '50%', overflow: 'hidden' }}>
+                                                <BlurImage
+                                                    src={msg.image}
+                                                    alt={msg.name}
+                                                />
+                                            </div>
                                             {msg.unread && (
                                                 <div style={{
                                                     position: 'absolute', bottom: '2px', right: '2px',

@@ -7,19 +7,15 @@ import { toast } from 'sonner';
 import PageTransition from './PageTransition';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Virtuoso } from 'react-virtuoso';
+import BlurImage from './BlurImage';
 
-const EventCard = ({ event, onToggle }) => {
+const EventCard = ({ event, onToggle, isLast }) => {
     const navigate = useNavigate();
     const isRegistered = event.registered;
     const isOrganizer = event.isOrganizer;
 
     const handleCardClick = () => {
         navigate(`/event/${event.id}`);
-    };
-
-    const handleInvite = (e) => {
-        e.stopPropagation();
-        toast.info(`Lien d'invitation copié pour : ${event.title}`);
     };
 
     const handleActionClick = (e, action) => {
@@ -33,102 +29,99 @@ const EventCard = ({ event, onToggle }) => {
     };
 
     return (
-        <div style={{ paddingBottom: '16px', paddingLeft: '16px', paddingRight: '16px' }}>
+        <div style={{ paddingBottom: isLast ? '120px' : '10px', paddingLeft: '16px', paddingRight: '16px' }}>
             <motion.div
                 onClick={handleCardClick}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 whileTap={{ scale: 0.98 }}
                 className="card cursor-pointer"
-                style={{ overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}
+                style={{ overflow: 'hidden', display: 'flex', flexDirection: 'row', height: '100px' }}
             >
-                <div style={{ position: 'relative', height: '160px', flexShrink: 0 }}>
-                    <img
+                {/* Image compacte à gauche */}
+                <div style={{ position: 'relative', width: '100px', flexShrink: 0 }}>
+                    <BlurImage
                         src={event.image || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=800&q=80"}
                         alt={event.title}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
+                    {/* Prix overlay */}
                     <div style={{
                         position: 'absolute',
-                        top: '10px',
-                        right: '10px',
-                        background: 'rgba(255,255,255,0.9)',
-                        padding: '4px 8px',
-                        borderRadius: '8px',
-                        fontWeight: 'bold',
-                        fontSize: '0.8rem',
-                        color: 'var(--color-primary)'
-                    }}>
-                        {event.date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
-                    </div>
-
-                    <button
-                        onClick={handleInvite}
-                        style={{
-                            position: 'absolute',
-                            top: '10px',
-                            left: '10px',
-                            background: 'rgba(0,0,0,0.5)',
-                            color: 'white',
-                            padding: '8px',
-                            borderRadius: '50%',
-                            border: 'none',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}
-                    >
-                        <Send size={16} />
-                    </button>
-
-                    <div style={{
-                        position: 'absolute',
-                        bottom: '10px',
-                        right: '10px',
+                        bottom: '6px',
+                        left: '6px',
                         background: '#111827',
                         color: 'white',
-                        padding: '6px 12px',
-                        borderRadius: '12px',
-                        fontWeight: '800',
-                        fontSize: '0.9rem',
-                        boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
+                        padding: '2px 6px',
+                        borderRadius: '6px',
+                        fontWeight: '700',
+                        fontSize: '10px'
                     }}>
-                        {/* Price Badge */}
                         {(event.price !== undefined && event.price !== null) ? (event.price === 0 ? 'Gratuit' : `${event.price}€`) : ''}
                     </div>
                 </div>
 
-                <div className="p-4" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div className="flex justify-between items-start">
-                        <h3 className="font-bold text-lg mb-2">{event.title}</h3>
+                {/* Contenu à droite */}
+                <div style={{ flex: 1, padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
+                    <div>
+                        <h3 style={{ 
+                            fontWeight: '700', 
+                            fontSize: '14px', 
+                            marginBottom: '4px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            color: 'var(--color-text)'
+                        }}>
+                            {event.title}
+                        </h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                <Clock size={11} />
+                                <span>{event.time}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '3px', overflow: 'hidden' }}>
+                                <MapPin size={11} style={{ flexShrink: 0 }} />
+                                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {event.location.split(',')[0]}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-4 mb-3 text-sm text-muted">
-                        <div className="flex items-center gap-1">
-                            <Clock size={14} />
-                            <span>{event.time}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <MapPin size={14} />
-                            <span>{event.location}</span>
-                        </div>
-                    </div>
-
-                    <div className="flex justify-between items-center gap-2 mt-4">
-                        <div className="flex gap-2 w-full">
-                            {isOrganizer ? (
-                                <button className="btn btn-primary flex-1 opacity-80" disabled>
-                                    <Scan size={16} className="mr-2 inline" /> Organisateur
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={(e) => handleActionClick(e, () => onToggle(event.id))}
-                                    className={`btn flex-1 flex items-center justify-center gap-2 text-sm px-3 py-2 ${isRegistered ? 'btn-primary' : ''}`}
-                                    style={!isRegistered ? { border: '1px solid var(--color-primary)', color: 'var(--color-primary)', background: 'transparent' } : {}}
-                                >
-                                    {isRegistered ? <CheckCircle size={14} /> : <Plus size={14} />}
-                                    {isRegistered ? 'Inscrit' : "S'inscrire"}
-                                </button>
-                            )}
-                        </div>
+                    {/* Bouton compact */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        {isOrganizer ? (
+                            <span style={{ 
+                                fontSize: '10px', 
+                                fontWeight: '600', 
+                                color: 'var(--color-primary)',
+                                padding: '4px 8px',
+                                background: 'var(--color-primary-light)',
+                                borderRadius: '6px'
+                            }}>
+                                Organisateur
+                            </span>
+                        ) : (
+                            <button
+                                onClick={(e) => handleActionClick(e, () => onToggle(event.id))}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    fontSize: '11px',
+                                    fontWeight: '600',
+                                    padding: '5px 10px',
+                                    borderRadius: '8px',
+                                    border: isRegistered ? 'none' : '1px solid var(--color-primary)',
+                                    background: isRegistered ? 'var(--color-primary)' : 'transparent',
+                                    color: isRegistered ? 'white' : 'var(--color-primary)',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                {isRegistered ? <CheckCircle size={12} /> : <Plus size={12} />}
+                                {isRegistered ? 'Inscrit' : "S'inscrire"}
+                            </button>
+                        )}
                     </div>
                 </div>
             </motion.div>
@@ -137,48 +130,116 @@ const EventCard = ({ event, onToggle }) => {
 };
 
 const EventList = () => {
-    const { events, selectedDate, toggleRegistration } = useEvents();
-    const [filteredEvents, setFilteredEvents] = useState([]);
+    const { events, selectedDate, setSelectedDate, toggleRegistration } = useEvents();
+    const [allItems, setAllItems] = useState([]);
+    const [currentVisibleDate, setCurrentVisibleDate] = useState(selectedDate);
+    const [initialIndex, setInitialIndex] = useState(0);
 
+    // Générer une liste d'événements pour tout le mois de janvier
     useEffect(() => {
-        const dayEvents = events.filter(e =>
-            e.date.getDate() === selectedDate.getDate() &&
-            e.date.getMonth() === selectedDate.getMonth() &&
-            e.date.getFullYear() === selectedDate.getFullYear()
-        );
-        setFilteredEvents(dayEvents);
-    }, [events, selectedDate]);
+        const items = [];
+        
+        // Charger tout le mois de janvier 2026
+        const startDate = new Date(2026, 0, 1);
+        const endDate = new Date(2026, 0, 31);
+        
+        let currentDay = new Date(startDate);
+        let selectedDateIndex = 0;
+        let itemCount = 0;
+        
+        while (currentDay <= endDate) {
+            const dayEvents = events.filter(e =>
+                e.date.getDate() === currentDay.getDate() &&
+                e.date.getMonth() === currentDay.getMonth() &&
+                e.date.getFullYear() === currentDay.getFullYear()
+            );
+
+            // Marquer l'index du premier événement de la date sélectionnée
+            if (dayEvents.length > 0 && 
+                currentDay.getDate() === selectedDate.getDate() &&
+                currentDay.getMonth() === selectedDate.getMonth()) {
+                selectedDateIndex = itemCount;
+            }
+
+            // Ajouter les événements avec leur date
+            dayEvents.forEach(event => {
+                items.push({ event, date: new Date(currentDay), id: `event-${event.id}` });
+                itemCount++;
+            });
+            
+            // Passer au jour suivant
+            currentDay.setDate(currentDay.getDate() + 1);
+        }
+        
+        setAllItems(items);
+        setInitialIndex(selectedDateIndex);
+        
+        if (items.length > 0) {
+            const initialItem = items[selectedDateIndex] || items[0];
+            setCurrentVisibleDate(initialItem.date);
+        }
+    }, [events]);
+
+    // Mettre à jour la date visible et le calendrier quand on scrolle
+    const handleVisibleItemsChanged = (range) => {
+        if (range.startIndex >= 0 && allItems.length > 0) {
+            const firstVisibleItem = allItems[range.startIndex];
+            if (firstVisibleItem && firstVisibleItem.date) {
+                const newDate = firstVisibleItem.date;
+                if (newDate.getDate() !== currentVisibleDate.getDate() || 
+                    newDate.getMonth() !== currentVisibleDate.getMonth()) {
+                    setCurrentVisibleDate(newDate);
+                    setSelectedDate(newDate);
+                }
+            }
+        }
+    };
 
     return (
         <PageTransition>
-            <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', paddingBottom: '90px' }}>
-
-
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
 
                 <div style={{ flexShrink: 0 }}>
                     <CalendarStrip />
-                    <div className="px-4 text-center" style={{ marginTop: '24px', marginBottom: '24px' }}>
-                        <h2 className="font-bold text-xl" style={{ letterSpacing: '-0.5px', textTransform: 'capitalize' }}>
-                            {filteredEvents.length > 0 ? (
-                                <>
-                                    Événements du <span style={{ color: 'var(--color-primary)' }}>
-                                        {selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                                    </span>
-                                </>
-                            ) : "Aucun événement"}
-                        </h2>
-                    </div>
                 </div>
 
-                <div style={{ flexGrow: 1 }}>
-                    {filteredEvents.length > 0 ? (
+                {/* Header de date sticky sous le calendrier */}
+                <div 
+                    style={{ 
+                        padding: '16px 24px',
+                        background: 'var(--color-background)',
+                        borderBottom: '1px solid var(--color-border)',
+                        flexShrink: 0
+                    }}
+                >
+                    <h2 
+                        className="font-bold text-xl" 
+                        style={{ 
+                            letterSpacing: '-0.5px', 
+                            textTransform: 'capitalize',
+                            color: 'var(--color-text)',
+                            textAlign: 'center'
+                        }}
+                    >
+                        <span style={{ color: 'var(--color-primary)' }}>
+                            {currentVisibleDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                        </span>
+                    </h2>
+                </div>
+
+                <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                    {allItems.length > 0 ? (
                         <Virtuoso
                             style={{ height: '100%' }}
-                            data={filteredEvents}
-                            itemContent={(index, event) => (
+                            data={allItems}
+                            overscan={200}
+                            initialTopMostItemIndex={initialIndex}
+                            rangeChanged={handleVisibleItemsChanged}
+                            itemContent={(index, item) => (
                                 <EventCard
-                                    event={event}
+                                    event={item.event}
                                     onToggle={toggleRegistration}
+                                    isLast={index === allItems.length - 1}
                                 />
                             )}
                         />
@@ -187,8 +248,7 @@ const EventList = () => {
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                             className="text-center text-muted py-8 px-4"
                         >
-                            <p>Pas d'événements pour le {selectedDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}.</p>
-                            <p className="text-sm mt-2">Essayez le 6, 8, or 10 Janvier !</p>
+                            <p>Pas d'événements pour les prochains jours.</p>
                         </motion.div>
                     )}
                 </div>

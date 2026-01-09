@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useEvents } from '../context/EventContext';
 import { ArrowLeft, MapPin, Clock, Share2, Heart, MessageCircle } from 'lucide-react';
 import PageTransition from './PageTransition';
+import BlurImage from './BlurImage';
 import { toast } from 'sonner';
 
 // Mock Participants Data
@@ -41,10 +42,9 @@ const EventDetail = () => {
 
                 {/* 1. Header Image Area */}
                 <div style={{ position: 'relative', height: '350px', width: '100%' }}>
-                    <img
+                    <BlurImage
                         src={event.image}
                         alt={event.title}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
 
                     {/* Header Icons Overlay */}
@@ -185,11 +185,12 @@ const EventDetail = () => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {MOCK_PARTICIPANTS.map(p => (
                                 <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                    <img
-                                        src={p.avatar}
-                                        style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--color-border)' }}
-                                        alt={p.name}
-                                    />
+                                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+                                        <BlurImage
+                                            src={p.avatar}
+                                            alt={p.name}
+                                        />
+                                    </div>
                                     <div style={{ flex: 1 }}>
                                         <p style={{ fontWeight: '700', color: 'var(--color-text)', marginBottom: '4px' }}>{p.name}</p>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

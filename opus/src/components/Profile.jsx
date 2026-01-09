@@ -1,12 +1,16 @@
-import React from 'react';
-import { Award, ShieldCheck, MapPin, Clock, Calendar } from 'lucide-react';
+import React, { useState } from 'react';
+import { Award, ShieldCheck, MapPin, Clock, Calendar, Heart, CalendarDays } from 'lucide-react';
 import PageTransition from './PageTransition';
+import BlurImage from './BlurImage';
 import { useEvents } from '../context/EventContext';
 
 const Profile = () => {
-    const { events } = useEvents();
+    const { events, getFavoriteEvents } = useEvents();
+    const [activeTab, setActiveTab] = useState('upcoming');
+    
     // Filter events where user is registered or is organizer
     const myEvents = events.filter(e => e.registered || e.isOrganizer).sort((a, b) => a.date - b.date);
+    const favoriteEvents = getFavoriteEvents();
 
     return (
         <PageTransition>
@@ -15,18 +19,19 @@ const Profile = () => {
                 {/* Header Profile */}
                 <div className="flex flex-col items-center mb-4 pt-4">
                     <div style={{ position: 'relative', marginBottom: '1rem' }}>
-                        <img
-                            src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                            alt="Profile"
-                            style={{
-                                width: '100px',
-                                height: '100px',
-                                borderRadius: '50%',
-                                objectFit: 'cover',
-                                border: '4px solid var(--color-surface)',
-                                boxShadow: 'var(--shadow-md)'
-                            }}
-                        />
+                        <div style={{
+                            width: '100px',
+                            height: '100px',
+                            borderRadius: '50%',
+                            overflow: 'hidden',
+                            border: '4px solid var(--color-surface)',
+                            boxShadow: 'var(--shadow-md)'
+                        }}>
+                            <BlurImage
+                                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+                                alt="Profile"
+                            />
+                        </div>
                         <div style={{
                             position: 'absolute',
                             bottom: '0',
@@ -96,33 +101,119 @@ const Profile = () => {
                     ))}
                 </div>
 
-                {/* Historique - Fixed Integration */}
-                <h3 className="font-bold mb-2">Mes événements à venir</h3>
+                {/* Tabs */}
+                <div style={{ display: 'flex', gap: '24px', marginBottom: '16px' }}>
+                    <button
+                        onClick={() => setActiveTab('upcoming')}
+                        style={{
+                            background: 'transparent', border: 'none', padding: 0,
+                            fontSize: '18px', fontWeight: activeTab === 'upcoming' ? '800' : '600',
+                            color: activeTab === 'upcoming' ? 'var(--color-text)' : 'var(--color-text-muted)',
+                            transition: 'color 0.2s',
+                            display: 'flex', alignItems: 'center', gap: '6px',
+                            paddingBottom: '8px',
+                            borderBottom: activeTab === 'upcoming' ? '3px solid var(--color-primary)' : '3px solid transparent'
+                        }}
+                    >
+                        <CalendarDays size={18} />
+                        À venir
+                        <span style={{
+                            background: 'var(--color-primary)', color: 'white',
+                            fontSize: '12px', fontWeight: 'bold',
+                            padding: '2px 8px', borderRadius: '12px',
+                        }}>{myEvents.length}</span>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('favorites')}
+                        style={{
+                            background: 'transparent', border: 'none', padding: 0,
+                            fontSize: '18px', fontWeight: activeTab === 'favorites' ? '800' : '600',
+                            color: activeTab === 'favorites' ? 'var(--color-text)' : 'var(--color-text-muted)',
+                            transition: 'color 0.2s',
+                            display: 'flex', alignItems: 'center', gap: '6px',
+                            paddingBottom: '8px',
+                            borderBottom: activeTab === 'favorites' ? '3px solid var(--color-primary)' : '3px solid transparent'
+                        }}
+                    >
+                        <Heart size={18} />
+                        Favoris
+                        <span style={{
+                            background: '#ec4899', color: 'white',
+                            fontSize: '12px', fontWeight: 'bold',
+                            padding: '2px 8px', borderRadius: '12px',
+                        }}>{favoriteEvents.length}</span>
+                    </button>
+                </div>
+
+                {/* Events List */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {myEvents.length > 0 ? myEvents.map((event) => (
-                        <div key={event.id} className="card p-3" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                            <img
-                                src={event.image}
-                                style={{ width: '50px', height: '50px', borderRadius: '8px', objectFit: 'cover', background: '#eee' }}
-                                alt={event.title}
-                            />
-                            <div style={{ flex: 1 }}>
-                                <div className="font-bold text-sm" style={{ marginBottom: '2px' }}>{event.title}</div>
-                                <div className="text-xs text-muted" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <span>{event.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
-                                    <span>•</span>
-                                    <span>{event.time}</span>
-                                    <span>•</span>
-                                    <span style={{ color: event.isOrganizer ? 'var(--color-primary)' : 'var(--color-success)' }}>
-                                        {event.isOrganizer ? 'Organisateur' : 'Inscrit'}
-                                    </span>
+                    {activeTab === 'upcoming' ? (
+                        myEvents.length > 0 ? myEvents.slice(0, 10).map((event) => (
+                            <div key={event.id} className="card p-3" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                <div style={{ width: '50px', height: '50px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
+                                    <BlurImage
+                                        src={event.image}
+                                        alt={event.title}
+                                    />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <div className="font-bold text-sm" style={{ marginBottom: '2px' }}>{event.title}</div>
+                                    <div className="text-xs text-muted" style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                                        <span>{event.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                                        <span>•</span>
+                                        <span>{event.time}</span>
+                                        <span>•</span>
+                                        <span style={{ color: event.isOrganizer ? 'var(--color-primary)' : 'var(--color-success)' }}>
+                                            {event.isOrganizer ? 'Organisateur' : 'Inscrit'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )) : (
-                        <div className="card p-4 text-center text-muted text-sm">
-                            Aucun événement à venir.
-                        </div>
+                        )) : (
+                            <div className="card p-4 text-center text-muted text-sm">
+                                Aucun événement à venir.
+                            </div>
+                        )
+                    ) : (
+                        favoriteEvents.length > 0 ? favoriteEvents.slice(0, 10).map((event) => (
+                            <div key={event.id} className="card p-3" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                <div style={{ width: '50px', height: '50px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
+                                    <BlurImage
+                                        src={event.image}
+                                        alt={event.title}
+                                    />
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '4px',
+                                        right: '4px',
+                                        background: '#ec4899',
+                                        borderRadius: '50%',
+                                        width: '16px',
+                                        height: '16px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <Heart size={10} color="white" fill="white" />
+                                    </div>
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <div className="font-bold text-sm" style={{ marginBottom: '2px' }}>{event.title}</div>
+                                    <div className="text-xs text-muted" style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                                        <span>{event.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                                        <span>•</span>
+                                        <span>{event.time}</span>
+                                        <span>•</span>
+                                        <span>{event.location.split(',')[0]}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )) : (
+                            <div className="card p-4 text-center text-muted text-sm">
+                                <Heart size={24} style={{ margin: '0 auto 8px', opacity: 0.3 }} />
+                                Aucun événement en favoris.
+                            </div>
+                        )
                     )}
                 </div>
             </div>

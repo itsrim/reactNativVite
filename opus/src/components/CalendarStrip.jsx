@@ -1,6 +1,6 @@
 import React from 'react';
 import { useEvents, getDays } from '../context/EventContext';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Map, PlusSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import useSwipe from '../hooks/useSwipe';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -30,25 +30,16 @@ const CalendarStrip = () => {
             style={{
                 borderBottomLeftRadius: '32px',
                 borderBottomRightRadius: '32px',
-                background: 'var(--color-surface)', // Dark background from theme
+                background: 'linear-gradient(135deg,rgb(51, 164, 79) 0%,rgb(65, 40, 204) 30%,rgb(212, 74, 166) 100%)',
                 overflow: 'hidden',
                 paddingBottom: '10px',
-                boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)' // Stronger shadow for floating feel
+                boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)'
             }}
         >
-            {/* Top Navigation Bar - Matching the Screenshot */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 24px', alignItems: 'center', color: '#71717a' }}>
-                <Map size={20} />
-                <div style={{ color: 'var(--color-primary)', borderBottom: '2px solid var(--color-primary)', paddingBottom: '4px' }}>
-                    <CalendarIcon size={20} />
-                </div>
-                <PlusSquare size={20} />
-            </div>
-
             {/* Header Month/Year */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '10px 0 20px', position: 'relative' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '12px 0 20px', position: 'relative' }}>
                 {/* Navigation Arrows Absolute to stay out of center Text */}
-                <button onClick={prev} style={{ position: 'absolute', left: '24px', padding: '8px', color: 'var(--color-text)' }}>
+                <button onClick={prev} style={{ position: 'absolute', left: '24px', padding: '8px', color: 'var(--color-text)', background: 'none', border: 'none', cursor: 'pointer' }}>
                     <ChevronLeft size={20} />
                 </button>
 
@@ -56,7 +47,7 @@ const CalendarStrip = () => {
                     {currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
                 </h2>
 
-                <button onClick={next} style={{ position: 'absolute', right: '24px', padding: '8px', color: 'var(--color-text)' }}>
+                <button onClick={next} style={{ position: 'absolute', right: '24px', padding: '8px', color: 'var(--color-text)', background: 'none', border: 'none', cursor: 'pointer' }}>
                     <ChevronRight size={20} />
                 </button>
             </div>
@@ -127,23 +118,23 @@ const CalendarStrip = () => {
                                             borderRadius: '50%',
                                             fontSize: '16px',
                                             fontWeight: '600',
+                                            position: 'relative',
+                                            overflow: 'hidden',
                                             // Logic for Circle Style
-                                            background: hasEvent ? `url(${eventImage}) center/cover` : (isSelected ? 'transparent' : 'transparent'),
-                                            color: hasEvent ? 'white' : (isSelected ? 'var(--color-primary)' : 'var(--color-text)'),
+                                            background: hasEvent ? `url(${eventImage}) center/cover` : 'transparent',
+                                            color: hasEvent ? 'white' : (isSelected ? 'var(--color-primary)' : 'rgba(255,255,255,0.9)'),
 
                                             // Selection Ring
                                             boxShadow: isSelected
-                                                ? (hasEvent ? '0 0 0 2px var(--color-background), 0 0 0 4px var(--color-primary), 0 0 15px var(--color-primary)' : '0 0 15px var(--color-primary-dark)')
+                                                ? (hasEvent ? '0 0 0 3px var(--color-primary), 0 0 15px var(--color-primary)' : '0 0 15px var(--color-primary-dark)')
                                                 : 'none',
                                             textShadow: hasEvent ? '0 1px 3px rgba(0,0,0,0.8)' : 'none',
 
-                                            // If selected but no event, maybe just glow text? Reference shows ring.
-                                            border: (!hasEvent && isSelected) ? 'none' : 'none',
                                             opacity: (!hasEvent && !isSelected) ? 0.7 : 1
                                         }}
                                     >
                                         { /* Overlay for readability if image */}
-                                        {hasEvent && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', borderRadius: '50%' }}></div>}
+                                        {hasEvent && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.25)', borderRadius: '50%' }}></div>}
 
                                         <span style={{ position: 'relative', zIndex: 1 }}>{date.getDate()}</span>
                                     </div>
