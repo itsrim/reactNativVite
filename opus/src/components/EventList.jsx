@@ -78,6 +78,22 @@ const EventCard = ({ event, onToggle }) => {
                     >
                         <Send size={16} />
                     </button>
+
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '10px',
+                        right: '10px',
+                        background: '#111827',
+                        color: 'white',
+                        padding: '6px 12px',
+                        borderRadius: '12px',
+                        fontWeight: '800',
+                        fontSize: '0.9rem',
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.3)'
+                    }}>
+                        {/* Price Badge */}
+                        {(event.price !== undefined && event.price !== null) ? (event.price === 0 ? 'Gratuit' : `${event.price}€`) : ''}
+                    </div>
                 </div>
 
                 <div className="p-4" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -141,9 +157,15 @@ const EventList = () => {
 
                 <div style={{ flexShrink: 0 }}>
                     <CalendarStrip />
-                    <div className="px-4 py-2">
-                        <h2 className="font-bold text-lg">
-                            {filteredEvents.length > 0 ? `Événements du ${selectedDate.getDate()}` : "Aucun événement"}
+                    <div className="px-4 text-center" style={{ marginTop: '24px', marginBottom: '24px' }}>
+                        <h2 className="font-bold text-xl" style={{ letterSpacing: '-0.5px', textTransform: 'capitalize' }}>
+                            {filteredEvents.length > 0 ? (
+                                <>
+                                    Événements du <span style={{ color: 'var(--color-primary)' }}>
+                                        {selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                    </span>
+                                </>
+                            ) : "Aucun événement"}
                         </h2>
                     </div>
                 </div>

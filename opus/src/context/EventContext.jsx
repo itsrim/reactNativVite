@@ -6,74 +6,80 @@ const INITIAL_EVENTS = [
     {
         id: 1,
         title: "Soirée Jeux de Société",
-        image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        image: "https://picsum.photos/800/600?random=1",
         date: new Date(2026, 0, 6), // Jan 06 2026
         time: "19:00",
         location: "Le Bar à Jeux, Paris",
         attendees: 12,
         description: "Une soirée détendue pour découvrir les nouveaux jeux du moment. Débutants bienvenus !",
         registered: true,
-        isOrganizer: true // Mock: I am the organizer of this event
+        isOrganizer: true, // Mock: I am the organizer of this event
+        price: 15 // Mock price
     },
     {
         id: 2,
         title: "Randonnée Urbaine",
-        image: "https://images.unsplash.com/photo-1517021897933-0e0319cfbc28?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        image: "https://picsum.photos/800/600?random=2",
         date: new Date(2026, 0, 8), // Jan 08 2026
         time: "14:00",
         location: "Départ Bastille",
         attendees: 24,
         description: "Redécouvrez Paris à pied à travers un parcours insolite de 10km.",
         registered: false,
-        isOrganizer: false
+        isOrganizer: false,
+        price: 0 // Free event
     },
     {
         id: 3,
         title: "Atelier Cuisine Italienne",
-        image: "https://images.unsplash.com/photo-1556910103-1c02745a30bf?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        image: "https://picsum.photos/800/600?random=3",
         date: new Date(2026, 0, 10), // Jan 10 2026
         time: "18:30",
         location: "Chez Luigi",
         attendees: 6,
         description: "Apprenez à faire vos propres pâtes fraîches avec un chef italien.",
         registered: true,
-        isOrganizer: false
+        isOrganizer: false,
+        price: 45
     },
     {
         id: 4,
         title: "Yoga au Parc",
-        image: "https://images.unsplash.com/photo-1544367563-12123d8975bd?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        image: "https://picsum.photos/800/600?random=4",
         date: new Date(2026, 0, 15), // Jan 15 2026
         time: "10:00",
         location: "Parc des Buttes Chaumont",
         attendees: 15,
         description: "Séance de yoga en plein air pour tous niveaux.",
         registered: false,
-        isOrganizer: false
+        isOrganizer: false,
+        price: 10
     },
     {
         id: 5,
         title: "Conférence Tech",
-        image: "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        image: "https://picsum.photos/800/600?random=5",
         date: new Date(2026, 0, 20), // Jan 20 2026
         time: "19:00",
         location: "Station F",
         attendees: 50,
         description: "Découvrez les dernières tendances en matière d'IA et de développement web.",
         registered: false,
-        isOrganizer: false
+        isOrganizer: false,
+        price: 150
     },
     {
         id: 6,
         title: "Afterwork Salsa",
-        image: "https://images.unsplash.com/photo-1516641396056-0ce60a85d49f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+        image: "https://picsum.photos/800/600?random=6",
         date: new Date(2026, 0, 22), // Jan 22 2026
         time: "20:00",
         location: "La Pachanga",
         attendees: 30,
         description: "Initiation gratuite suivie d'une soirée dansante.",
         registered: false,
-        isOrganizer: false
+        isOrganizer: false,
+        price: 12
     }
 ];
 

@@ -5,13 +5,13 @@ import PageTransition from './PageTransition';
 import { useNavigate } from 'react-router-dom';
 
 const FRIENDS = [
-    { id: 1, name: 'Hanna', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80', msg: 2 },
-    { id: 2, name: 'Sara', image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80', msg: 0 },
-    { id: 3, name: 'Georgie', image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80', msg: 5 },
-    { id: 4, name: 'Britney', image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=150&q=80', msg: 1 },
-    { id: 5, name: 'Mike', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80', msg: 0 },
-    { id: 6, name: 'Josh', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80', msg: 3 },
-    { id: 7, name: 'Emma', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80', msg: 0 },
+    { id: 1, name: 'Hanna', image: 'https://i.pravatar.cc/150?img=1', msg: 2 },
+    { id: 2, name: 'Sara', image: 'https://i.pravatar.cc/150?img=5', msg: 0 },
+    { id: 3, name: 'Georgie', image: 'https://i.pravatar.cc/150?img=9', msg: 5 },
+    { id: 4, name: 'Britney', image: 'https://i.pravatar.cc/150?img=4', msg: 1 },
+    { id: 5, name: 'Mike', image: 'https://i.pravatar.cc/150?img=8', msg: 0 },
+    { id: 6, name: 'Josh', image: 'https://i.pravatar.cc/150?img=11', msg: 3 },
+    { id: 7, name: 'Emma', image: 'https://i.pravatar.cc/150?img=16', msg: 0 },
 ];
 
 const SUGGESTIONS = Array.from({ length: 50 }, (_, i) => ({
@@ -19,12 +19,12 @@ const SUGGESTIONS = Array.from({ length: 50 }, (_, i) => ({
     name: ['Maya', 'Nancy', 'Kat', 'Stacey', 'Zoe', 'Lily', 'Rose'][i % 7],
     age: 20 + (i % 10),
     image: [
-        'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1516726817505-f5ed825b05a8?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80'
+        'https://i.pravatar.cc/600?img=20',
+        'https://i.pravatar.cc/600?img=21',
+        'https://i.pravatar.cc/600?img=22',
+        'https://i.pravatar.cc/600?img=23',
+        'https://i.pravatar.cc/600?img=24',
+        'https://i.pravatar.cc/600?img=25'
     ][i % 6],
     height: i % 2 === 0 ? 280 : 220,
     rotation: (Math.random() - 0.5) * 12, // Random rotation between -6 and 6 degrees
@@ -32,12 +32,12 @@ const SUGGESTIONS = Array.from({ length: 50 }, (_, i) => ({
 }));
 
 const MESSAGES = [
-    { id: 1, name: 'Peggie', age: 23, message: 'That sounds like a lot of fun! Would you like...', time: '5 mins', unread: true, image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80' },
-    { id: 2, name: 'Eve', age: 22, message: "I'm good! Thanks", time: '38 mins', unread: false, image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=150&q=80' },
-    { id: 3, name: 'Sofi', age: 26, message: 'Yes, it works for me! See you!', time: '2 hrs', unread: true, image: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=150&q=80' },
-    { id: 4, name: 'Rachel', age: 23, message: 'Yeah!', time: '8 hrs', unread: false, image: 'https://images.unsplash.com/photo-1516726817505-f5ed825b05a8?auto=format&fit=crop&w=150&q=80' },
-    { id: 5, name: 'Roberta', age: 25, message: 'How are you doing?', time: '2 days', unread: false, image: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=150&q=80' },
-    { id: 6, name: 'Rosella', age: 21, message: 'Maybe tomorrow?', time: 'Last week', unread: true, image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80' },
+    { id: 1, name: 'Peggie', age: 23, message: 'That sounds like a lot of fun! Would you like...', time: '5 mins', unread: true, image: 'https://i.pravatar.cc/150?img=30' },
+    { id: 2, name: 'Eve', age: 22, message: "I'm good! Thanks", time: '38 mins', unread: false, image: 'https://i.pravatar.cc/150?img=31' },
+    { id: 3, name: 'Sofi', age: 26, message: 'Yes, it works for me! See you!', time: '2 hrs', unread: true, image: 'https://i.pravatar.cc/150?img=32' },
+    { id: 4, name: 'Rachel', age: 23, message: 'Yeah!', time: '8 hrs', unread: false, image: 'https://i.pravatar.cc/150?img=33' },
+    { id: 5, name: 'Roberta', age: 25, message: 'How are you doing?', time: '2 days', unread: false, image: 'https://i.pravatar.cc/150?img=34' },
+    { id: 6, name: 'Rosella', age: 21, message: 'Maybe tomorrow?', time: 'Last week', unread: true, image: 'https://i.pravatar.cc/150?img=35' },
 ];
 
 const SocialPage = () => {
