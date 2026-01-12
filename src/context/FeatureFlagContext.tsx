@@ -61,6 +61,13 @@ const DEFAULT_CONFIG: Config = {
         description: 'restrictions.disableSearchDesc',
         category: 'Restrictions Free',
         freeOnly: true
+    },
+    isAdmin: {
+        value: false,
+        label: 'restrictions.adminMode',
+        description: 'restrictions.adminModeDesc',
+        category: 'Compte',
+        isToggle: true
     }
 };
 
@@ -111,6 +118,7 @@ export const FeatureFlagProvider: React.FC<FeatureFlagProviderProps> = ({ childr
     }, [config]);
 
     const isPremium = config.isPremium.value;
+    const isAdmin = config.isAdmin?.value || false;
 
     // Toggle une config
     const toggleConfig = (configKey: ConfigKey): void => {
@@ -170,6 +178,7 @@ export const FeatureFlagProvider: React.FC<FeatureFlagProviderProps> = ({ childr
             getLimits,
             getConfigByCategory,
             resetConfig,
+            isAdmin,
             // Compatibilité
             isEnabled,
             flags: config,

@@ -1,11 +1,13 @@
 import React from 'react';
 import { useEvents, getDays } from '../context/EventContext';
+import { useFeatureFlags } from '../context/FeatureFlagContext';
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import useSwipe from '../hooks/useSwipe';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const CalendarStrip: React.FC = () => {
     const { selectedDate, setSelectedDate, getEventsForDate } = useEvents();
+    const { isAdmin } = useFeatureFlags();
     const { isWeekly, setWeekly, currentDate, next, prev, direction, handlers } = useSwipe(selectedDate);
 
     const days = getDays(currentDate, isWeekly);
@@ -29,7 +31,19 @@ const CalendarStrip: React.FC = () => {
             {/* Header Month/Year */}
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '12px 0 20px', position: 'relative' }}>
                 {/* Navigation Arrows Absolute to stay out of center Text */}
-                <button onClick={prev} style={{ position: 'absolute', left: '24px', padding: '8px', color: '#111827', background: 'none', border: 'none', cursor: 'pointer' }}>
+                <button
+                    onClick={prev}
+                    style={{
+                        position: 'absolute',
+                        left: '24px',
+                        padding: '8px',
+                        color: '#111827',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        opacity: 1 // Let useSwipe handle the block, or we could add visual feedback here
+                    }}
+                >
                     <ChevronLeft size={20} />
                 </button>
 
@@ -82,15 +96,23 @@ const CalendarStrip: React.FC = () => {
                             return (
                                 <div
                                     key={index}
-                                    onClick={() => setSelectedDate(date)}
+                                    onClick={() => {
+                                        if (!isAdmin) {
+                                            const today = new Date();
+                                            today.setHours(0, 0, 0, 0);
+                                            if (date.getTime() < today.getTime()) return;
+                                        }
+                                        setSelectedDate(date);
+                                    }}
                                     style={{
                                         display: 'flex',
                                         flexDirection: 'column',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        cursor: 'pointer',
+                                        cursor: (!isAdmin && date.getTime() < (new Date().setHours(0, 0, 0, 0))) ? 'default' : 'pointer',
                                         position: 'relative',
                                         height: '50px',
+                                        opacity: (!isAdmin && date.getTime() < (new Date().setHours(0, 0, 0, 0))) ? 0.3 : 1
                                     }}
                                 >
                                     <div
@@ -125,7 +147,7 @@ const CalendarStrip: React.FC = () => {
             </motion.div>
 
             {/* Small arrow indicator */}
-            <div 
+            <div
                 onClick={toggleView}
                 style={{
                     display: 'flex',

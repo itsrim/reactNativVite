@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Award, ShieldCheck, Heart, CalendarDays, History, Users, Settings, RotateCcw, Crown, Lock, Globe } from 'lucide-react';
+import { Award, ShieldCheck, Heart, CalendarDays, History, Users, Settings, RotateCcw, Crown, Lock, Globe, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import PageTransition from './PageTransition';
 import BlurImage from './BlurImage';
@@ -29,14 +29,14 @@ type TabType = 'upcoming' | 'favorites' | 'friends' | 'past' | 'settings';
 const Profile: React.FC = () => {
     const { t, i18n } = useTranslation();
     const { events, getFavoriteEvents } = useEvents();
-    const { getConfigByCategory, toggleConfig, resetConfig, isPremium, getLimits } = useFeatureFlags();
+    const { getConfigByCategory, toggleConfig, resetConfig, isPremium, getLimits, isAdmin } = useFeatureFlags();
     const [activeTab, setActiveTab] = useState<TabType>('upcoming');
-    
+
     const currentLanguage = i18n.language;
     const toggleLanguage = () => {
         i18n.changeLanguage(currentLanguage === 'fr' ? 'en' : 'fr');
     };
-    
+
     const today = new Date();
     const limits = getLimits();
     // Filter events where user is registered or is organizer
@@ -53,17 +53,17 @@ const Profile: React.FC = () => {
                 <div className="flex flex-col items-center mb-4 pt-4">
                     <div style={{ position: 'relative', marginBottom: '1rem' }}>
                         <div style={{
-                                width: '100px',
-                                height: '100px',
-                                borderRadius: '50%',
+                            width: '100px',
+                            height: '100px',
+                            borderRadius: '50%',
                             overflow: 'hidden',
-                                border: '4px solid var(--color-surface)',
-                                boxShadow: 'var(--shadow-md)'
+                            border: '4px solid var(--color-surface)',
+                            boxShadow: 'var(--shadow-md)'
                         }}>
                             <BlurImage
                                 src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
                                 alt="Profile"
-                        />
+                            />
                         </div>
                         <div style={{
                             position: 'absolute',
@@ -135,9 +135,9 @@ const Profile: React.FC = () => {
                 </div> */}
 
                 {/* Tabs - Underline style */}
-                <div style={{ 
-                    display: 'flex', 
-                    gap: '16px', 
+                <div style={{
+                    display: 'flex',
+                    gap: '16px',
                     marginBottom: '16px',
                     overflowX: 'auto',
                     scrollbarWidth: 'none',
@@ -300,27 +300,27 @@ const Profile: React.FC = () => {
                     {/* Upcoming Events */}
                     {activeTab === 'upcoming' && (
                         myEvents.length > 0 ? myEvents.slice(0, 10).map((event) => (
-                        <div key={event.id} className="card p-3" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                            <div key={event.id} className="card p-3" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                                 <div style={{ width: '50px', height: '50px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0 }}>
                                     <BlurImage src={event.image} alt={event.title} />
                                 </div>
-                            <div style={{ flex: 1 }}>
-                                <div className="font-bold text-sm" style={{ marginBottom: '2px' }}>{event.title}</div>
+                                <div style={{ flex: 1 }}>
+                                    <div className="font-bold text-sm" style={{ marginBottom: '2px' }}>{event.title}</div>
                                     <div className="text-xs text-muted" style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-                                    <span>{event.date.toLocaleDateString(i18n.language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'short' })}</span>
-                                    <span>•</span>
-                                    <span>{event.time}</span>
-                                    <span>•</span>
-                                    <span style={{ color: event.isOrganizer ? 'var(--color-primary)' : 'var(--color-success)' }}>
-                                        {event.isOrganizer ? t('events.organizer') : t('settings.registered')}
-                                    </span>
+                                        <span>{event.date.toLocaleDateString(i18n.language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'short' })}</span>
+                                        <span>•</span>
+                                        <span>{event.time}</span>
+                                        <span>•</span>
+                                        <span style={{ color: event.isOrganizer ? 'var(--color-primary)' : 'var(--color-success)' }}>
+                                            {event.isOrganizer ? t('events.organizer') : t('settings.registered')}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )) : (
-                        <div className="card p-4 text-center text-muted text-sm">
+                        )) : (
+                            <div className="card p-4 text-center text-muted text-sm">
                                 <CalendarDays size={24} style={{ margin: '0 auto 8px', opacity: 0.3 }} />
-                            {t('settings.noUpcomingEvents')}
+                                {t('settings.noUpcomingEvents')}
                             </div>
                         )
                     )}
@@ -416,11 +416,11 @@ const Profile: React.FC = () => {
                     {activeTab === 'settings' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {/* Statut Premium */}
-                            <div 
-                                className="card" 
+                            <div
+                                className="card"
                                 onClick={() => toggleConfig('isPremium')}
-                                style={{ 
-                                    overflow: 'hidden', 
+                                style={{
+                                    overflow: 'hidden',
                                     cursor: 'pointer',
                                     background: isPremium ? 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)' : 'var(--color-surface)'
                                 }}
@@ -444,16 +444,16 @@ const Profile: React.FC = () => {
                                             <Crown size={24} color={isPremium ? 'white' : '#f59e0b'} />
                                         </div>
                                         <div>
-                                            <div style={{ 
-                                                fontSize: '15px', 
-                                                fontWeight: '700', 
+                                            <div style={{
+                                                fontSize: '15px',
+                                                fontWeight: '700',
                                                 color: isPremium ? 'white' : 'var(--color-text)',
                                                 marginBottom: '2px'
                                             }}>
                                                 {isPremium ? t('settings.premiumActive') : t('settings.premiumInactive')}
                                             </div>
-                                            <div style={{ 
-                                                fontSize: '12px', 
+                                            <div style={{
+                                                fontSize: '12px',
                                                 color: isPremium ? 'rgba(255,255,255,0.8)' : 'var(--color-text-muted)'
                                             }}>
                                                 {isPremium ? t('settings.allFeaturesUnlocked') : t('settings.limitedFeatures')}
@@ -483,12 +483,80 @@ const Profile: React.FC = () => {
                                 </div>
                             </div>
 
+                            {/* Admin Mode - NEW */}
+                            <div
+                                className="card"
+                                onClick={() => toggleConfig('isAdmin')}
+                                style={{
+                                    overflow: 'hidden',
+                                    cursor: 'pointer',
+                                    background: isAdmin ? 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' : 'var(--color-surface)'
+                                }}
+                            >
+                                <div style={{
+                                    padding: '16px',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <div style={{
+                                            width: '44px',
+                                            height: '44px',
+                                            borderRadius: '12px',
+                                            background: isAdmin ? 'rgba(255,255,255,0.3)' : '#e0e7ff',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}>
+                                            <Shield size={24} color={isAdmin ? 'white' : '#4f46e5'} />
+                                        </div>
+                                        <div>
+                                            <div style={{
+                                                fontSize: '15px',
+                                                fontWeight: '700',
+                                                color: isAdmin ? 'white' : 'var(--color-text)',
+                                                marginBottom: '2px'
+                                            }}>
+                                                Admin Mode
+                                            </div>
+                                            <div style={{
+                                                fontSize: '12px',
+                                                color: isAdmin ? 'rgba(255,255,255,0.8)' : 'var(--color-text-muted)'
+                                            }}>
+                                                {isAdmin ? "Accès illimité aux dates passées" : "Mode utilisateur standard"}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style={{
+                                        width: '44px',
+                                        height: '26px',
+                                        borderRadius: '13px',
+                                        background: isAdmin ? 'rgba(255,255,255,0.4)' : '#d1d5db',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        padding: '2px',
+                                        transition: 'background 0.2s'
+                                    }}>
+                                        <div style={{
+                                            width: '22px',
+                                            height: '22px',
+                                            borderRadius: '50%',
+                                            background: 'white',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                                            transform: isAdmin ? 'translateX(18px)' : 'translateX(0)',
+                                            transition: 'transform 0.2s'
+                                        }} />
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Sélecteur de langue */}
-                            <div 
-                                className="card" 
+                            <div
+                                className="card"
                                 onClick={toggleLanguage}
-                                style={{ 
-                                    overflow: 'hidden', 
+                                style={{
+                                    overflow: 'hidden',
                                     cursor: 'pointer'
                                 }}
                             >
@@ -511,16 +579,16 @@ const Profile: React.FC = () => {
                                             <Globe size={24} color="#0284c7" />
                                         </div>
                                         <div>
-                                            <div style={{ 
-                                                fontSize: '15px', 
-                                                fontWeight: '700', 
+                                            <div style={{
+                                                fontSize: '15px',
+                                                fontWeight: '700',
                                                 color: 'var(--color-text)',
                                                 marginBottom: '2px'
                                             }}>
                                                 {t('settings.language')}
                                             </div>
-                                            <div style={{ 
-                                                fontSize: '12px', 
+                                            <div style={{
+                                                fontSize: '12px',
                                                 color: 'var(--color-text-muted)'
                                             }}>
                                                 {currentLanguage === 'fr' ? t('settings.french') : t('settings.english')}

@@ -1,7 +1,10 @@
 import { useState, TouchEvent } from 'react';
 import { UseSwipeReturn, SwipeHandlers } from '../types';
 
+import { useFeatureFlags } from '../context/FeatureFlagContext';
+
 const useSwipe = (initialDate?: Date): UseSwipeReturn => {
+    const { isAdmin } = useFeatureFlags();
     const [currentDate, setCurrentDate] = useState<Date>(initialDate || new Date());
     const [isWeekly, setWeekly] = useState<boolean>(true);
     const [direction, setDirection] = useState<number>(0);
@@ -24,13 +27,34 @@ const useSwipe = (initialDate?: Date): UseSwipeReturn => {
     };
 
     const prev = (): void => {
-        setDirection(-1);
         const newDate = new Date(currentDate);
         if (isWeekly) {
             newDate.setDate(newDate.getDate() - 7);
         } else {
             newDate.setMonth(newDate.getMonth() - 1);
         }
+
+        // Restriction pour les non-admins : ne pas aller avant aujourd'hui
+        if (!isAdmin) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Si la nouvelle date (début de semaine/mois) est avant aujourd'hui,
+            // on vérifie si on est déjà au minimum possible
+            if (newDate < today) {
+                // On s'assure de ne pas descendre en dessous d'aujourd'hui
+                // Pour la vue hebdo, on peut rester sur la semaine en cours si elle contient aujourd'hui
+                if (isWeekly) {
+                    // Si on recule d'une semaine et qu'on dépasse aujourd'hui, on bloque
+                    return;
+                } else {
+                    // Pour le mois, on bloque si on passe au mois précédent
+                    return;
+                }
+            }
+        }
+
+        setDirection(-1);
         setCurrentDate(newDate);
     };
 

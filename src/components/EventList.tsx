@@ -10,6 +10,7 @@ import { motion } from 'framer-motion';
 import { Virtuoso } from 'react-virtuoso';
 import BlurImage from './BlurImage';
 import { Event } from '../types';
+import ParticipantStack from './ParticipantStack';
 
 interface FeatureFlags {
     favoriteButton: boolean;
@@ -36,7 +37,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onToggle, onToggleFavorite
     const isRegistered = event.registered;
     const isOrganizer = event.isOrganizer;
     const isFavorite = event.favorite;
-    
+
     const canRegister = isRegistered || registrationCount < featureFlags.maxRegistrations;
     const canFavorite = isFavorite || favoriteCount < featureFlags.maxFavorites;
 
@@ -108,9 +109,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, onToggle, onToggleFavorite
                                 transition: 'all 0.2s ease'
                             }}
                         >
-                            <Heart 
-                                size={14} 
-                                color="white" 
+                            <Heart
+                                size={14}
+                                color="white"
                                 fill={isFavorite ? 'white' : 'transparent'}
                             />
                         </button>
@@ -134,16 +135,31 @@ const EventCard: React.FC<EventCardProps> = ({ event, onToggle, onToggleFavorite
                 </div>
 
                 {/* Contenu à droite */}
-                <div style={{ flex: 1, padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
+                <div style={{ flex: 1, padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0, position: 'relative' }}>
                     <div>
-                        <h3 style={{ 
-                            fontWeight: '700', 
-                            fontSize: '14px', 
+                        {/* Participant Stack */}
+                        {event.participantImages && event.participantImages.length > 0 && !isOrganizer && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '10px',
+                                right: '12px',
+                                zIndex: 10
+                            }}>
+                                <ParticipantStack
+                                    images={event.participantImages}
+                                    totalAttendees={event.attendees}
+                                />
+                            </div>
+                        )}
+                        <h3 style={{
+                            fontWeight: '700',
+                            fontSize: '14px',
                             marginBottom: '4px',
                             whiteSpace: 'nowrap',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
-                            color: 'var(--color-text)'
+                            color: 'var(--color-text)',
+                            paddingRight: event.participantImages && event.participantImages.length > 0 ? '60px' : '0'
                         }}>
                             {event.title}
                         </h3>
@@ -157,9 +173,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, onToggle, onToggleFavorite
                                 {(() => {
                                     const shouldHideAddress = event.hideAddressUntilRegistered && !isRegistered && !isOrganizer;
                                     return (
-                                        <span style={{ 
-                                            whiteSpace: 'nowrap', 
-                                            overflow: 'hidden', 
+                                        <span style={{
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
                                             textOverflow: 'ellipsis',
                                             filter: shouldHideAddress ? 'blur(4px)' : 'none'
                                         }}>
@@ -176,9 +192,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, onToggle, onToggleFavorite
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             {/* Compteur participants - contrôlé par feature flag */}
                             {featureFlags.showAttendeeCount && (
-                                <div style={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
                                     gap: '4px',
                                     fontSize: '11px',
                                     color: 'var(--color-text-muted)'
@@ -191,7 +207,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onToggle, onToggleFavorite
                             )}
                         </div>
                         {/* Organisateur en couleur */}
-                        <span style={{ 
+                        <span style={{
                             fontSize: '10px',
                             fontWeight: '600',
                             color: isOrganizer ? '#ec4899' : '#6366f1'
@@ -234,18 +250,26 @@ interface EventItem {
 
 const EventList: React.FC = () => {
     const { events, selectedDate, setSelectedDate, toggleRegistration, toggleFavorite, getFavoriteEvents } = useEvents();
-    const { isEnabled, isRestricted, getLimits } = useFeatureFlags();
+    const { isEnabled, isRestricted, getLimits, isAdmin } = useFeatureFlags();
     const [allItems, setAllItems] = useState<EventItem[]>([]);
     const [currentVisibleDate, setCurrentVisibleDate] = useState<Date>(selectedDate);
     const [initialIndex, setInitialIndex] = useState<number>(0);
 
     const limits = getLimits();
-    const today = new Date();
-    
+    const todayAtZero = new Date();
+    todayAtZero.setHours(0, 0, 0, 0);
+
+    // Reset selectedDate if past for non-admins
+    useEffect(() => {
+        if (!isAdmin && selectedDate.getTime() < todayAtZero.getTime()) {
+            setSelectedDate(todayAtZero);
+        }
+    }, [isAdmin, selectedDate, setSelectedDate]);
+
     // Compteurs pour les limites
-    const registrationCount = events.filter(e => e.registered && !e.isOrganizer && e.date >= today).length;
+    const registrationCount = events.filter(e => e.registered && !e.isOrganizer && e.date >= todayAtZero).length;
     const favoriteCount = getFavoriteEvents().length;
-    
+
     // Feature flags pour les cartes d'événements
     const featureFlags: FeatureFlags = {
         favoriteButton: isEnabled('favoriteButton'),
@@ -260,15 +284,17 @@ const EventList: React.FC = () => {
     // Générer une liste d'événements pour tout le mois de janvier
     useEffect(() => {
         const items: EventItem[] = [];
-        
+
         // Charger tout le mois de janvier 2026
         const startDate = new Date(2026, 0, 1);
         const endDate = new Date(2026, 0, 31);
-        
+        const todayAtZero = new Date();
+        todayAtZero.setHours(0, 0, 0, 0);
+
         let currentDay = new Date(startDate);
         let selectedDateIndex = 0;
         let itemCount = 0;
-        
+
         while (currentDay <= endDate) {
             const dayEvents = events.filter(e =>
                 e.date.getDate() === currentDay.getDate() &&
@@ -282,25 +308,28 @@ const EventList: React.FC = () => {
             });
 
             // Marquer l'index du premier événement de la date sélectionnée
-            if (dayEvents.length > 0 && 
+            if (dayEvents.length > 0 &&
                 currentDay.getDate() === selectedDate.getDate() &&
                 currentDay.getMonth() === selectedDate.getMonth()) {
                 selectedDateIndex = itemCount;
             }
 
             // Ajouter les événements avec leur date
-            dayEvents.forEach(event => {
-                items.push({ event, date: new Date(currentDay), id: `event-${event.id}` });
-                itemCount++;
-            });
-            
+            // Restriction non-admin : ne pas ajouter d'événements passés à la liste scrollable
+            if (isAdmin || currentDay >= todayAtZero) {
+                dayEvents.forEach(event => {
+                    items.push({ event, date: new Date(currentDay), id: `event-${event.id}` });
+                    itemCount++;
+                });
+            }
+
             // Passer au jour suivant
             currentDay.setDate(currentDay.getDate() + 1);
         }
-        
+
         setAllItems(items);
         setInitialIndex(selectedDateIndex);
-        
+
         if (items.length > 0) {
             const initialItem = items[selectedDateIndex] || items[0];
             setCurrentVisibleDate(initialItem.date);
@@ -313,7 +342,7 @@ const EventList: React.FC = () => {
             const firstVisibleItem = allItems[range.startIndex];
             if (firstVisibleItem && firstVisibleItem.date) {
                 const newDate = firstVisibleItem.date;
-                if (newDate.getDate() !== currentVisibleDate.getDate() || 
+                if (newDate.getDate() !== currentVisibleDate.getDate() ||
                     newDate.getMonth() !== currentVisibleDate.getMonth()) {
                     setCurrentVisibleDate(newDate);
                     setSelectedDate(newDate);
@@ -331,18 +360,18 @@ const EventList: React.FC = () => {
                 </div>
 
                 {/* Header de date sticky sous le calendrier */}
-                <div 
-                    style={{ 
+                <div
+                    style={{
                         padding: '16px 24px',
                         background: 'var(--color-background)',
                         borderBottom: '1px solid var(--color-border)',
                         flexShrink: 0
                     }}
                 >
-                    <h2 
-                        className="font-bold text-xl" 
-                        style={{ 
-                            letterSpacing: '-0.5px', 
+                    <h2
+                        className="font-bold text-xl"
+                        style={{
+                            letterSpacing: '-0.5px',
                             textTransform: 'capitalize',
                             color: 'var(--color-text)',
                             textAlign: 'center'

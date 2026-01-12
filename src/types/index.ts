@@ -15,6 +15,7 @@ export interface Event {
     price: number;
     favorite: boolean;
     hideAddressUntilRegistered: boolean;
+    participantImages?: string[];
 }
 
 export interface NewEvent {
@@ -54,7 +55,7 @@ export interface ConfigItemWithKey extends ConfigItem {
     key: string;
 }
 
-export type ConfigKey = 
+export type ConfigKey =
     | 'isPremium'
     | 'blurProfiles'
     | 'disableMessages'
@@ -62,7 +63,8 @@ export type ConfigKey =
     | 'limitEventCreation'
     | 'limitParticipants'
     | 'limitRegistrations'
-    | 'disableSearch';
+    | 'disableSearch'
+    | 'isAdmin';
 
 export type Config = Record<ConfigKey, ConfigItem>;
 
@@ -81,6 +83,7 @@ export interface FeatureFlagContextType {
     getLimits: () => Limits;
     getConfigByCategory: () => Record<string, ConfigItemWithKey[]>;
     resetConfig: () => void;
+    isAdmin: boolean;
     isEnabled: (flagKey: string) => boolean;
     flags: Config;
     toggleFlag: (configKey: ConfigKey) => void;

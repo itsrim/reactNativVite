@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Event, NewEvent, EventContextType } from '../types';
+import { getUserData } from './VisitContext';
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
@@ -23,7 +24,7 @@ const LOCATIONS: string[] = [
 const TIMES: string[] = ["08:00", "09:30", "10:00", "11:00", "12:30", "14:00", "15:30", "17:00", "18:30", "19:00", "20:00", "21:00"];
 
 const ORGANIZER_NAMES: string[] = [
-    "Sophie M.", "Lucas D.", "Emma W.", "Thomas R.", "Léa P.", "Hugo B.", 
+    "Sophie M.", "Lucas D.", "Emma W.", "Thomas R.", "Léa P.", "Hugo B.",
     "Camille V.", "Nathan L.", "Chloé G.", "Maxime F.", "Julie K.", "Antoine S.",
     "Marie C.", "Alexandre T.", "Sarah J.", "Pierre N.", "Clara H.", "Julien M."
 ];
@@ -32,10 +33,10 @@ const ORGANIZER_NAMES: string[] = [
 const generateMassiveEvents = (): Event[] => {
     const events: Event[] = [];
     let id = 1;
-    
+
     for (let day = 1; day <= 31; day++) {
         const eventsPerDay = 25 + Math.floor(Math.random() * 15); // 25-40 événements par jour
-        
+
         for (let i = 0; i < eventsPerDay; i++) {
             const maxAttendees = [20, 30, 50, 75, 100, 150, 200][Math.floor(Math.random() * 7)];
             const attendees = Math.floor(Math.random() * maxAttendees * 0.95) + 5;
@@ -55,11 +56,12 @@ const generateMassiveEvents = (): Event[] => {
                 organizer: isOrganizer ? 'Moi' : ORGANIZER_NAMES[Math.floor(Math.random() * ORGANIZER_NAMES.length)],
                 price: Math.random() > 0.3 ? Math.floor(Math.random() * 150) + 5 : 0,
                 favorite: Math.random() > 0.85, // 15% de chance d'être en favoris
-                hideAddressUntilRegistered: Math.random() > 0.6 // 40% masquent l'adresse aux non-inscrits
+                hideAddressUntilRegistered: Math.random() > 0.6, // 40% masquent l'adresse aux non-inscrits
+                participantImages: Array.from({ length: Math.min(attendees, 5) }, (_, j) => getUserData(Math.floor(Math.random() * 50)).image)
             });
         }
     }
-    
+
     return events;
 };
 
@@ -71,13 +73,13 @@ interface EventProviderProps {
 
 export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
     const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS);
-    const [selectedDate, setSelectedDate] = useState<Date>(new Date(2026, 0, 6));
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
     const addEvent = (newEvent: NewEvent): void => {
-        setEvents([...events, { 
-            ...newEvent, 
-            id: Date.now(), 
-            registered: true, 
+        setEvents([...events, {
+            ...newEvent,
+            id: Date.now(),
+            registered: true,
             isOrganizer: true,
             organizer: 'Moi',
             attendees: 1,
