@@ -4,15 +4,15 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/reactNativVite/',
+  base: '/meetabit/',
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'Opus Social',
-        short_name: 'Opus',
+        name: 'Meetabit Social',
+        short_name: 'Meetabit',
         description: 'Modern Social Network for Events',
         theme_color: '#4f46e5',
         background_color: '#111827',

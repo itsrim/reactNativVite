@@ -170,9 +170,9 @@ interface LayoutProps {
 
 function Layout({ children }: LayoutProps) {
   const location = useLocation();
-  const isFullScreen = location.pathname.startsWith('/event/') || 
-                       location.pathname.startsWith('/user/') || 
-                       location.pathname.startsWith('/chat/');
+  const isFullScreen = location.pathname.startsWith('/event/') ||
+    location.pathname.startsWith('/user/') ||
+    location.pathname.startsWith('/chat/');
 
   return (
     <div style={{ paddingBottom: isFullScreen ? '0' : '70px' }}>
@@ -190,7 +190,7 @@ function App() {
           <VisitProvider>
             <MessageProvider>
               <Toaster position="top-center" richColors theme="system" />
-              <Router>
+              <Router basename="/meetabit">
                 <Layout>
                   <AnimatedRoutes />
                 </Layout>
