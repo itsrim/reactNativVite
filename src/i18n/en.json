@@ -30,6 +30,10 @@
     "startConversation": "Visit profiles to start chatting!",
     "online": "Online",
     "searchPlaceholder": "Search for someone...",
+    "searchGroups": "Search for a group or a member...",
+    "searchSuggestions": "Search for a member...",
+    "searchMessages": "Search for an author...",
+    "searchVisitors": "Search for a visitor...",
     "like": "Like"
   },
   "profile": {
@@ -53,7 +57,14 @@
   },
   "chat": {
     "placeholder": "Write a message...",
-    "startChat": "Start a conversation with {{name}}!"
+    "startChat": "Start a conversation with {{name}}!",
+    "settings": "Chat Settings",
+    "muteSounds": "Mute sounds",
+    "blockNotifications": "Block notifications",
+    "leaveGroup": "Leave group",
+    "removeMember": "Remove from group",
+    "confirmLeave": "Are you sure you want to leave this group?",
+    "membersCount": "{{count}} members"
   },
   "events": {
     "title": "Events",
