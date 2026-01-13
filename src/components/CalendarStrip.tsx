@@ -23,13 +23,14 @@ const CalendarStrip: React.FC = () => {
                 borderBottomLeftRadius: '32px',
                 borderBottomRightRadius: '32px',
                 background: 'linear-gradient(135deg,rgb(225, 242, 40) 0%,rgb(218, 232, 92) 30%,rgb(212, 74, 166) 100%)',
-                overflow: 'hidden',
-                paddingBottom: '10px',
-                boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)'
+                overflow: 'visible',
+                paddingBottom: '0',
+                boxShadow: '0 8px 20px -10px rgba(0,0,0,0.5)',
+                position: 'relative'
             }}
         >
             {/* Header Month/Year */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '12px 0 20px', position: 'relative' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '8px 0 10px', position: 'relative' }}>
                 {/* Navigation Arrows Absolute to stay out of center Text */}
                 <button
                     onClick={prev}
@@ -41,25 +42,25 @@ const CalendarStrip: React.FC = () => {
                         background: 'none',
                         border: 'none',
                         cursor: 'pointer',
-                        opacity: 1 // Let useSwipe handle the block, or we could add visual feedback here
+                        opacity: 1
                     }}
                 >
-                    <ChevronLeft size={20} />
+                    <ChevronLeft size={18} />
                 </button>
 
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', textTransform: 'capitalize', color: '#111827' }}>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: 'bold', textTransform: 'capitalize', color: '#111827' }}>
                     {currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
                 </h2>
 
                 <button onClick={next} style={{ position: 'absolute', right: '24px', padding: '8px', color: '#111827', background: 'none', border: 'none', cursor: 'pointer' }}>
-                    <ChevronRight size={20} />
+                    <ChevronRight size={18} />
                 </button>
             </div>
 
-            {/* Days Grid Wrapper with Framer Motion for smooth height resize */}
+            {/* Days Grid Wrapper */}
             <motion.div
                 initial={false}
-                animate={{ height: isWeekly ? 90 : 360 }}
+                animate={{ height: isWeekly ? 55 : 270 }} // Reduced height further
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 style={{ overflow: 'hidden', position: 'relative', zIndex: 2 }}
             >
@@ -75,12 +76,12 @@ const CalendarStrip: React.FC = () => {
                             display: 'grid',
                             gridTemplateColumns: 'repeat(7, 1fr)',
                             width: '100%',
-                            rowGap: isWeekly ? '0' : '20px',
+                            rowGap: isWeekly ? '0' : '16px',
                         }}
                     >
                         {/* Weekday Labels */}
                         {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((d, i) => (
-                            <div key={i} style={{ textAlign: 'center', fontSize: '13px', color: 'rgba(0,0,0,0.6)', marginBottom: '8px' }}>
+                            <div key={i} style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(0,0,0,0.5)', marginBottom: '2px' }}>
                                 {['L', 'M', 'M', 'J', 'V', 'S', 'D'][i]}
                             </div>
                         ))}
@@ -111,26 +112,26 @@ const CalendarStrip: React.FC = () => {
                                         justifyContent: 'center',
                                         cursor: (!isAdmin && date.getTime() < (new Date().setHours(0, 0, 0, 0))) ? 'default' : 'pointer',
                                         position: 'relative',
-                                        height: '50px',
+                                        height: '36px', // Tighter height
                                         opacity: (!isAdmin && date.getTime() < (new Date().setHours(0, 0, 0, 0))) ? 0.3 : 1
                                     }}
                                 >
                                     <div
                                         style={{
-                                            width: '42px',
-                                            height: '42px',
+                                            width: '30px', // Even smaller
+                                            height: '30px',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             borderRadius: '50%',
-                                            fontSize: '16px',
+                                            fontSize: '12px',
                                             fontWeight: '600',
                                             position: 'relative',
                                             overflow: 'hidden',
                                             background: hasEvent ? `url(${eventImage}) center/cover` : 'transparent',
                                             color: hasEvent ? 'white' : (isSelected ? 'var(--color-primary)' : 'rgba(0,0,0,0.7)'),
                                             boxShadow: isSelected
-                                                ? (hasEvent ? '0 0 0 3px var(--color-primary), 0 0 15px var(--color-primary)' : '0 0 15px var(--color-primary-dark)')
+                                                ? (hasEvent ? '0 0 0 2px var(--color-primary), 0 0 10px var(--color-primary)' : '0 0 10px var(--color-primary-dark)')
                                                 : 'none',
                                             textShadow: hasEvent ? '0 1px 3px rgba(0,0,0,0.8)' : 'none',
                                             opacity: (!hasEvent && !isSelected) ? 0.7 : 1
@@ -146,20 +147,31 @@ const CalendarStrip: React.FC = () => {
                 </AnimatePresence>
             </motion.div>
 
-            {/* Small arrow indicator */}
+            {/* Circular Toggle Button - Overlapping the bottom edge */}
             <div
                 onClick={toggleView}
                 style={{
+                    position: 'absolute',
+                    bottom: '-10px', // Centered on the bottom edge (half of 20px)
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
                     display: 'flex',
+                    alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
-                    paddingTop: '4px'
+                    zIndex: 100,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
                 }}
             >
                 {isWeekly ? (
-                    <ChevronDown size={16} color="rgba(0,0,0,0.5)" />
+                    <ChevronDown size={12} color="var(--color-text)" />
                 ) : (
-                    <ChevronUp size={16} color="rgba(0,0,0,0.5)" />
+                    <ChevronUp size={12} color="var(--color-text)" />
                 )}
             </div>
         </div>
@@ -167,4 +179,3 @@ const CalendarStrip: React.FC = () => {
 };
 
 export default CalendarStrip;
-

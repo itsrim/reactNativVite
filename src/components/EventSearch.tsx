@@ -6,6 +6,7 @@ import { useEvents } from '../context/EventContext';
 import { useFeatureFlags } from '../context/FeatureFlagContext';
 import PageTransition from './PageTransition';
 import BlurImage from './BlurImage';
+import FeaturedEventCard from './FeaturedEventCard';
 import './SearchInput.css';
 
 const EventSearch: React.FC = () => {
@@ -14,39 +15,66 @@ const EventSearch: React.FC = () => {
     const { events } = useEvents();
     const { isRestricted } = useFeatureFlags();
     const [selectedCategory, setSelectedCategory] = useState<string>("all");
-    
+    const [searchQuery, setSearchQuery] = useState<string>("");
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const TRENDING_COLORS = [
+        '#c2410c', // Orange-red (like image)
+        '#047857', // Emerald
+        '#4338ca', // Indigo
+        '#be185d', // Pink
+        '#1d4ed8'  // Blue
+    ];
+
     const CATEGORIES = [
         { key: "all", label: t('search.allCategories') },
-        { key: "outings", label: i18n.language === 'fr' ? "Sorties" : "Outings" },
-        { key: "museum", label: i18n.language === 'fr' ? "Musée" : "Museum" },
-        { key: "sport", label: "Sport" },
-        { key: "hiking", label: i18n.language === 'fr' ? "Rando" : "Hiking" },
-        { key: "dance", label: i18n.language === 'fr' ? "Danse" : "Dance" },
-        { key: "drinks", label: i18n.language === 'fr' ? "Verre" : "Drinks" }
+        { key: "Sortie", label: i18n.language === 'fr' ? "Sorties" : "Outings" },
+        { key: "Musée", label: i18n.language === 'fr' ? "Musée" : "Museum" },
+        { key: "Sport", label: "Sport" },
+        { key: "Hiking", label: i18n.language === 'fr' ? "Rando" : "Hiking" },
+        { key: "Danse", label: i18n.language === 'fr' ? "Danse" : "Dance" },
+        { key: "Drinks", label: i18n.language === 'fr' ? "Verre" : "Drinks" }
     ];
-    
+
     const searchDisabled = isRestricted('disableSearch');
 
-    // Trier les événements par date et horaire
-    const sortedEvents = [...events].sort((a, b) => {
-        // D'abord par date
+    // 1. Filtrer les événements à partir d'aujourd'hui
+    // 2. Filtrer par titre (searchQuery)
+    // 3. Filtrer par catégorie si sélectionnée
+    const filteredEvents = events.filter(event => {
+        const isFromToday = event.date >= today;
+        const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = selectedCategory === "all" || event.category === selectedCategory;
+        return isFromToday && matchesSearch && matchesCategory;
+    });
+
+    // 4. Trier par date et horaire
+    const sortedEvents = [...filteredEvents].sort((a, b) => {
         const dateCompare = a.date.getTime() - b.date.getTime();
         if (dateCompare !== 0) return dateCompare;
-        // Ensuite par horaire
         const timeA = a.time.split(':').map(Number);
         const timeB = b.time.split(':').map(Number);
         return (timeA[0] * 60 + timeA[1]) - (timeB[0] * 60 + timeB[1]);
     });
 
-    // Events pour le masonry
-    const allEvents = sortedEvents.slice(0, 10);
+    // Events pour le trending (top 5 des imminents)
+    const upcomingTrending = sortedEvents.slice(0, 5);
+
+    // Events pour le masonry (tous les filtrés/triés)
+    const allEvents = sortedEvents;
 
     return (
         <PageTransition>
-            <div style={{ minHeight: '100vh', background: 'var(--color-background)', paddingBottom: '100px' }}>
+            <div style={{ minHeight: '100vh', background: 'var(--color-background)', paddingBottom: '120px' }}>
 
                 {/* NEW HEADER - Compact */}
                 <div style={{
+                    position: 'sticky',
+                    top: 0,
+                    left: 0,
+                    right: 0,
                     flexShrink: 0,
                     background: 'linear-gradient(135deg, #fbbf24 0%, #f472b6 100%)',
                     padding: '16px 20px 20px',
@@ -54,7 +82,7 @@ const EventSearch: React.FC = () => {
                     borderBottomRightRadius: '30px',
                     color: '#111827',
                     boxShadow: '0 10px 30px rgba(244, 114, 182, 0.3)',
-                    zIndex: 10,
+                    zIndex: 100,
                     marginBottom: '12px'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -95,6 +123,8 @@ const EventSearch: React.FC = () => {
                                 type="text"
                                 placeholder={searchDisabled ? t('social.premium') : t('search.placeholder')}
                                 disabled={searchDisabled}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                                 style={{
                                     border: 'none',
                                     outline: 'none',
@@ -144,66 +174,26 @@ const EventSearch: React.FC = () => {
                 </div>
 
                 {/* 2. Trending Carousel */}
-                <div style={{ padding: '0 0 24px 24px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingRight: '24px', marginBottom: '16px' }}>
+                <div style={{ padding: '0 0 24px 0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', padding: '0 24px', marginBottom: '16px' }}>
                         <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--color-text)' }}>{t('search.trending')} 🔥</h2>
                     </div>
 
                     <div style={{
                         display: 'flex',
-                        gap: '16px',
+                        gap: '20px',
                         overflowX: 'auto',
-                        paddingRight: '24px',
-                        paddingBottom: '1px',
+                        padding: '0 24px 10px',
                         scrollbarWidth: 'none',
-                        msOverflowStyle: 'none'
+                        msOverflowStyle: 'none',
+                        scrollSnapType: 'x mandatory'
                     }}>
-                        {sortedEvents.slice(0, 5).map((event, i) => (
-                            <div
-                                key={i}
-                                onClick={() => navigate(`/event/${event.id}`)}
-                                style={{
-                                    flexShrink: 0,
-                                    width: '280px',
-                                    height: '180px',
-                                    borderRadius: '24px',
-                                    position: 'relative',
-                                    overflow: 'hidden',
-                                    boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
-                                    scrollSnapAlign: 'start',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                <BlurImage
-                                    src={event.image}
-                                    alt={event.title}
-                                />
-                                <div style={{
-                                    position: 'absolute',
-                                    bottom: 0,
-                                    left: 0,
-                                    right: 0,
-                                    padding: '16px',
-                                    background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)'
-                                }}>
-                                    <h3 style={{ color: 'white', fontWeight: '700', fontSize: '16px', marginBottom: '4px' }}>{event.title}</h3>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <MapPin size={12} color="#d1d5db" />
-                                        {(() => {
-                                            const shouldHide = event.hideAddressUntilRegistered && !event.registered && !event.isOrganizer;
-                                            return (
-                                                <span style={{ 
-                                                    color: '#d1d5db', 
-                                                    fontSize: '12px',
-                                                    filter: shouldHide ? 'blur(4px)' : 'none'
-                                                }}>
-                                                    {shouldHide ? t('events.locationHidden') : event.location.split(',')[0]}
-                                                </span>
-                                            );
-                                        })()}
-                                    </div>
-                                </div>
-                            </div>
+                        {upcomingTrending.map((event, i) => (
+                            <FeaturedEventCard
+                                key={event.id}
+                                event={event}
+                                backgroundColor={TRENDING_COLORS[i % TRENDING_COLORS.length]}
+                            />
                         ))}
                     </div>
                 </div>
@@ -294,8 +284,8 @@ const EventSearch: React.FC = () => {
                                             {(() => {
                                                 const shouldHide = event.hideAddressUntilRegistered && !event.registered && !event.isOrganizer;
                                                 return (
-                                                    <span style={{ 
-                                                        fontSize: '10px', 
+                                                    <span style={{
+                                                        fontSize: '10px',
                                                         color: 'var(--color-text-muted)',
                                                         filter: shouldHide ? 'blur(4px)' : 'none'
                                                     }}>

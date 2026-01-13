@@ -16,6 +16,7 @@ export interface Event {
     favorite: boolean;
     hideAddressUntilRegistered: boolean;
     participantImages?: string[];
+    category?: string;
 }
 
 export interface NewEvent {

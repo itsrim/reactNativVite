@@ -43,7 +43,7 @@ const generateMassiveEvents = (): Event[] => {
             const isOrganizer = Math.random() > 0.9;
             events.push({
                 id: id++,
-                title: EVENT_TITLES[Math.floor(Math.random() * EVENT_TITLES.length)] + ` #${id}`,
+                title: EVENT_TITLES[Math.floor(Math.random() * EVENT_TITLES.length)],
                 image: `https://picsum.photos/800/600?random=${id}`,
                 date: new Date(2026, 0, day),
                 time: TIMES[Math.floor(Math.random() * TIMES.length)],
@@ -57,7 +57,8 @@ const generateMassiveEvents = (): Event[] => {
                 price: Math.random() > 0.3 ? Math.floor(Math.random() * 150) + 5 : 0,
                 favorite: Math.random() > 0.85, // 15% de chance d'être en favoris
                 hideAddressUntilRegistered: Math.random() > 0.6, // 40% masquent l'adresse aux non-inscrits
-                participantImages: Array.from({ length: Math.min(attendees, 5) }, (_, j) => getUserData(Math.floor(Math.random() * 50)).image)
+                participantImages: Array.from({ length: Math.min(attendees, 5) }, (_, j) => getUserData(Math.floor(Math.random() * 50)).image),
+                category: ["Sortie", "Sport", "Musée", "Danse", "Hiking"][Math.floor(Math.random() * 5)]
             });
         }
     }
@@ -72,7 +73,12 @@ interface EventProviderProps {
 }
 
 export const EventProvider: React.FC<EventProviderProps> = ({ children }) => {
-    const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS);
+    const [events, setEvents] = useState<Event[]>(() =>
+        INITIAL_EVENTS.map(event => ({
+            ...event,
+            title: event.title.replace(/\s*#\d+$/, '')
+        }))
+    );
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
     const addEvent = (newEvent: NewEvent): void => {

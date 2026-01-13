@@ -355,32 +355,41 @@ const EventList: React.FC = () => {
         <PageTransition>
             <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
 
-                <div style={{ flexShrink: 0 }}>
-                    <CalendarStrip />
-                </div>
+                <div style={{
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 100,
+                    background: 'var(--color-background)',
+                    display: 'flex',
+                    flexDirection: 'column'
+                }}>
+                    <div style={{ flexShrink: 0 }}>
+                        <CalendarStrip />
+                    </div>
 
-                {/* Header de date sticky sous le calendrier */}
-                <div
-                    style={{
-                        padding: '16px 24px',
-                        background: 'var(--color-background)',
-                        borderBottom: '1px solid var(--color-border)',
-                        flexShrink: 0
-                    }}
-                >
-                    <h2
-                        className="font-bold text-xl"
+                    {/* Header de date sticky sous le calendrier */}
+                    <div
                         style={{
-                            letterSpacing: '-0.5px',
-                            textTransform: 'capitalize',
-                            color: 'var(--color-text)',
-                            textAlign: 'center'
+                            padding: '10px 16px',
+                            background: 'var(--color-background)',
+                            borderBottom: '1px solid var(--color-border)',
+                            flexShrink: 0
                         }}
                     >
-                        <span style={{ color: 'var(--color-primary)' }}>
-                            {currentVisibleDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                        </span>
-                    </h2>
+                        <h2
+                            className="font-bold text-lg"
+                            style={{
+                                letterSpacing: '-0.3px',
+                                textTransform: 'capitalize',
+                                color: 'var(--color-text)',
+                                textAlign: 'center'
+                            }}
+                        >
+                            <span style={{ color: 'var(--color-primary)' }}>
+                                {currentVisibleDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                            </span>
+                        </h2>
+                    </div>
                 </div>
 
                 <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
