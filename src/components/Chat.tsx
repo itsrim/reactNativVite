@@ -102,9 +102,19 @@ const Chat: React.FC = () => {
                                 <BlurImage src={otherUser?.image || ''} alt={otherUser?.name || ''} />
                             )}
                         </div>
-                        <div>
-                            <h3 style={{ fontWeight: '700', fontSize: '16px', color: 'var(--color-text)' }}>
+                        <div
+                            onClick={() => {
+                                if (isGroup && groupData?.eventId) {
+                                    navigate(`/event/${groupData.eventId}`);
+                                }
+                            }}
+                            style={{ cursor: (isGroup && groupData?.eventId) ? 'pointer' : 'default' }}
+                        >
+                            <h3 style={{ fontWeight: '700', fontSize: '16px', color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 {isGroup ? groupData?.name : `${otherUser?.name}, ${otherUser?.age}`}
+                                {isGroup && groupData?.eventId && (
+                                    <span style={{ color: '#3b82f6', fontSize: '14px' }}>↗</span>
+                                )}
                             </h3>
                             <span style={{ fontSize: '12px', color: isGroup ? 'var(--color-text-muted)' : '#22c55e' }}>
                                 {isGroup ? `${groupData?.members.length} membres` : t('social.online')}
