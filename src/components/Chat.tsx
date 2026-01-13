@@ -230,13 +230,15 @@ const Chat: React.FC = () => {
                                         <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
                                             Membres ({groupData.members.length})
                                         </span>
-                                        <button
-                                            onClick={() => setShowAddMember(!showAddMember)}
-                                            style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: '700' }}
-                                        >
-                                            <UserPlus size={14} />
-                                            {t('chat.addMember')}
-                                        </button>
+                                        {!groupData.eventId && (
+                                            <button
+                                                onClick={() => setShowAddMember(!showAddMember)}
+                                                style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: '700' }}
+                                            >
+                                                <UserPlus size={14} />
+                                                {t('chat.addMember')}
+                                            </button>
+                                        )}
                                     </div>
 
                                     {showAddMember && (
