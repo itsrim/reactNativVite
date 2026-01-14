@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import CalendarStrip from './CalendarStrip';
 import { MapPin, Clock, Users, CheckCircle, Plus, Heart } from 'lucide-react';
 import { useEvents } from '../context/EventContext';
@@ -74,170 +74,159 @@ const EventCard: React.FC<EventCardProps> = ({ event, onToggle, onToggleFavorite
     };
 
     return (
-        <div style={{ paddingBottom: isLast ? '120px' : '10px', paddingLeft: '16px', paddingRight: '16px' }}>
-            <motion.div
-                onClick={handleCardClick}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileTap={{ scale: 0.98 }}
-                className="card cursor-pointer"
-                style={{ overflow: 'hidden', display: 'flex', flexDirection: 'row', height: '100px' }}
-            >
-                {/* Image compacte à gauche */}
-                <div style={{ position: 'relative', width: '100px', flexShrink: 0 }}>
-                    <BlurImage
-                        src={event.image || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=800&q=80"}
-                        alt={event.title}
-                    />
-                    {/* Bouton favori - contrôlé par feature flag */}
+        <div
+            onClick={handleCardClick}
+            className="card cursor-pointer"
+            style={{ 
+                overflow: 'hidden', 
+                display: 'flex', 
+                flexDirection: 'column',
+                height: '100%'
+            }}
+        >
+            {/* Image en haut */}
+            <div style={{ position: 'relative', height: '90px', flexShrink: 0 }}>
+                <BlurImage
+                    src={event.image || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=800&q=80"}
+                    alt={event.title}
+                />
+                {/* Bouton Inscrit/S'inscrire ou Organisateur - Haut gauche */}
+                {isOrganizer ? (
+                    <div style={{
+                        position: 'absolute',
+                        top: '6px',
+                        left: '6px',
+                        background: '#ec4899',
+                        color: 'white',
+                        padding: '4px 8px',
+                        borderRadius: '8px',
+                        fontSize: '9px',
+                        fontWeight: '600',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    }}>
+                        Organisateur
+                    </div>
+                ) : (
+                    <button
+                        onClick={(e) => handleActionClick(e, () => onToggle(event.id))}
+                        style={{
+                            position: 'absolute',
+                            top: '6px',
+                            left: '6px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            fontSize: '9px',
+                            fontWeight: '600',
+                            padding: '4px 8px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: isRegistered ? 'var(--color-primary)' : 'rgba(255,255,255,0.95)',
+                            color: isRegistered ? 'white' : 'var(--color-primary)',
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}
+                    >
+                        {isRegistered ? <CheckCircle size={10} /> : <Plus size={10} />}
+                        {isRegistered ? 'Inscrit' : "S'inscrire"}
+                    </button>
+                )}
+                {/* Prix - Haut droite */}
+                {featureFlags.showEventPrice && (
+                    <div style={{
+                        position: 'absolute',
+                        top: '6px',
+                        right: '6px',
+                        background: '#111827',
+                        color: 'white',
+                        padding: '3px 7px',
+                        borderRadius: '6px',
+                        fontWeight: '700',
+                        fontSize: '9px'
+                    }}>
+                        {(event.price !== undefined && event.price !== null) ? (event.price === 0 ? 'Gratuit' : `${event.price}€`) : ''}
+                    </div>
+                )}
+                {/* Participants Stack - Bas gauche */}
+                {event.participantImages && event.participantImages.length > 0 && (
+                    <div style={{ position: 'absolute', bottom: '6px', left: '6px' }}>
+                        <ParticipantStack images={event.participantImages} totalAttendees={event.attendees} size={18} />
+                    </div>
+                )}
+                {/* Compteur participants - Bas droite */}
+                {featureFlags.showAttendeeCount && (
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '6px',
+                        right: '6px',
+                        background: 'rgba(0,0,0,0.6)',
+                        color: 'white',
+                        padding: '2px 6px',
+                        borderRadius: '6px',
+                        fontSize: '9px',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '3px'
+                    }}>
+                        <Users size={10} />
+                        <span>{event.attendees}/{event.maxAttendees}</span>
+                    </div>
+                )}
+            </div>
+
+            {/* Contenu en bas */}
+            <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                {/* Titre + Cœur favori */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <h3 style={{
+                        fontWeight: '700',
+                        fontSize: '13px',
+                        flex: 1,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        color: 'var(--color-text)',
+                        lineHeight: '1.2',
+                        margin: 0
+                    }}>
+                        {event.title}
+                    </h3>
                     {featureFlags.favoriteButton && (
                         <button
                             onClick={handleFavoriteClick}
                             style={{
-                                position: 'absolute',
-                                top: '6px',
-                                right: '6px',
-                                background: isFavorite ? '#ec4899' : 'rgba(0,0,0,0.4)',
+                                background: 'none',
                                 border: 'none',
-                                borderRadius: '50%',
-                                width: '26px',
-                                height: '26px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                padding: 0,
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease'
+                                flexShrink: 0
                             }}
                         >
-                            <Heart
-                                size={14}
-                                color="white"
-                                fill={isFavorite ? 'white' : 'transparent'}
+                            <Heart 
+                                size={14} 
+                                color={isFavorite ? '#ec4899' : 'var(--color-text-muted)'} 
+                                fill={isFavorite ? '#ec4899' : 'transparent'} 
                             />
                         </button>
                     )}
-                    {/* Prix overlay - contrôlé par feature flag */}
-                    {featureFlags.showEventPrice && (
-                        <div style={{
-                            position: 'absolute',
-                            bottom: '6px',
-                            left: '6px',
-                            background: '#111827',
-                            color: 'white',
-                            padding: '2px 6px',
-                            borderRadius: '6px',
-                            fontWeight: '700',
-                            fontSize: '10px'
-                        }}>
-                            {(event.price !== undefined && event.price !== null) ? (event.price === 0 ? 'Gratuit' : `${event.price}€`) : ''}
-                        </div>
-                    )}
                 </div>
-
-                {/* Contenu à droite */}
-                <div style={{ flex: 1, padding: '10px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0, position: 'relative' }}>
-                    <div>
-                        {/* Participant Stack */}
-                        {event.participantImages && event.participantImages.length > 0 && !isOrganizer && (
-                            <div style={{
-                                position: 'absolute',
-                                top: '10px',
-                                right: '12px',
-                                zIndex: 10
-                            }}>
-                                <ParticipantStack
-                                    images={event.participantImages}
-                                    totalAttendees={event.attendees}
-                                />
-                            </div>
-                        )}
-                        <h3 style={{
-                            fontWeight: '700',
-                            fontSize: '14px',
-                            marginBottom: '4px',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            color: 'var(--color-text)',
-                            paddingRight: event.participantImages && event.participantImages.length > 0 ? '60px' : '0'
-                        }}>
-                            {event.title}
-                        </h3>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                <Clock size={11} />
-                                <span>{event.time}</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '3px', overflow: 'hidden' }}>
-                                <MapPin size={11} style={{ flexShrink: 0 }} />
-                                {(() => {
-                                    const shouldHideAddress = event.hideAddressUntilRegistered && !isRegistered && !isOrganizer;
-                                    return (
-                                        <span style={{
-                                            whiteSpace: 'nowrap',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            filter: shouldHideAddress ? 'blur(4px)' : 'none'
-                                        }}>
-                                            {shouldHideAddress ? 'Inscrivez-vous pour voir' : event.location.split(',')[0]}
-                                        </span>
-                                    );
-                                })()}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Organisateur + Participants + Bouton */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {/* Compteur participants - contrôlé par feature flag */}
-                            {featureFlags.showAttendeeCount && (
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                    fontSize: '11px',
-                                    color: 'var(--color-text-muted)'
-                                }}>
-                                    <Users size={12} />
-                                    <span>
-                                        {event.attendees}/{event.maxAttendees}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                        {/* Organisateur en couleur */}
-                        <span style={{
-                            fontSize: '10px',
-                            fontWeight: '600',
-                            color: isOrganizer ? '#ec4899' : '#6366f1'
-                        }}>
-                            {isOrganizer ? 'Organisateur' : event.organizer}
-                        </span>
-                        {!isOrganizer && (
-                            <button
-                                onClick={(e) => handleActionClick(e, () => onToggle(event.id))}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                    fontSize: '11px',
-                                    fontWeight: '600',
-                                    padding: '5px 10px',
-                                    borderRadius: '8px',
-                                    border: isRegistered ? 'none' : '1px solid var(--color-primary)',
-                                    background: isRegistered ? 'var(--color-primary)' : 'transparent',
-                                    color: isRegistered ? 'white' : 'var(--color-primary)',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                {isRegistered ? <CheckCircle size={12} /> : <Plus size={12} />}
-                                {isRegistered ? 'Inscrit' : "S'inscrire"}
-                            </button>
-                        )}
-                    </div>
+                
+                {/* Heure + Ville */}
+                <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Clock size={11} />
+                    <span>{event.time}</span>
+                    <MapPin size={11} style={{ marginLeft: '4px' }} />
+                    <span style={{ 
+                        whiteSpace: 'nowrap', 
+                        overflow: 'hidden', 
+                        textOverflow: 'ellipsis',
+                        filter: event.hideAddressUntilRegistered && !isRegistered && !isOrganizer ? 'blur(4px)' : 'none'
+                    }}>
+                        {event.location.split(',').pop()?.trim() || event.location.split(',')[0]}
+                    </span>
                 </div>
-            </motion.div>
+            </div>
         </div>
     );
 };
@@ -246,6 +235,11 @@ interface EventItem {
     event: Event;
     date: Date;
     id: string;
+}
+
+interface EventRow {
+    items: EventItem[];
+    date: Date;
 }
 
 const EventList: React.FC = () => {
@@ -328,7 +322,8 @@ const EventList: React.FC = () => {
         }
 
         setAllItems(items);
-        setInitialIndex(selectedDateIndex);
+        // L'index pour les rows sera calculé dans le useMemo
+        setInitialIndex(Math.floor(selectedDateIndex / 2));
 
         if (items.length > 0) {
             const initialItem = items[selectedDateIndex] || items[0];
@@ -336,12 +331,25 @@ const EventList: React.FC = () => {
         }
     }, [events, selectedDate]);
 
+    // Grouper les événements par paires (rows de 2)
+    const rows: EventRow[] = useMemo(() => {
+        const result: EventRow[] = [];
+        for (let i = 0; i < allItems.length; i += 2) {
+            const rowItems = allItems.slice(i, i + 2);
+            result.push({
+                items: rowItems,
+                date: rowItems[0]?.date || new Date()
+            });
+        }
+        return result;
+    }, [allItems]);
+
     // Mettre à jour la date visible et le calendrier quand on scrolle
     const handleVisibleItemsChanged = (range: { startIndex: number; endIndex: number }): void => {
-        if (range.startIndex >= 0 && allItems.length > 0) {
-            const firstVisibleItem = allItems[range.startIndex];
-            if (firstVisibleItem && firstVisibleItem.date) {
-                const newDate = firstVisibleItem.date;
+        if (range.startIndex >= 0 && rows.length > 0) {
+            const firstVisibleRow = rows[range.startIndex];
+            if (firstVisibleRow && firstVisibleRow.date) {
+                const newDate = firstVisibleRow.date;
                 if (newDate.getDate() !== currentVisibleDate.getDate() ||
                     newDate.getMonth() !== currentVisibleDate.getMonth()) {
                     setCurrentVisibleDate(newDate);
@@ -393,23 +401,35 @@ const EventList: React.FC = () => {
                 </div>
 
                 <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                    {allItems.length > 0 ? (
+                    {rows.length > 0 ? (
                         <Virtuoso
                             style={{ height: '100%' }}
-                            data={allItems}
+                            data={rows}
                             overscan={200}
                             initialTopMostItemIndex={initialIndex}
                             rangeChanged={handleVisibleItemsChanged}
-                            itemContent={(index, item) => (
-                                <EventCard
-                                    event={item.event}
-                                    onToggle={toggleRegistration}
-                                    onToggleFavorite={toggleFavorite}
-                                    isLast={index === allItems.length - 1}
-                                    featureFlags={featureFlags}
-                                    registrationCount={registrationCount}
-                                    favoriteCount={favoriteCount}
-                                />
+                            itemContent={(index, row) => (
+                                <div style={{ 
+                                    display: 'grid', 
+                                    gridTemplateColumns: 'repeat(2, 1fr)', 
+                                    gap: '10px',
+                                    padding: '5px 12px',
+                                    paddingBottom: index === rows.length - 1 ? '120px' : '5px',
+                                    height: '160px'
+                                }}>
+                                    {row.items.map((item) => (
+                                        <EventCard
+                                            key={item.id}
+                                            event={item.event}
+                                            onToggle={toggleRegistration}
+                                            onToggleFavorite={toggleFavorite}
+                                            isLast={false}
+                                            featureFlags={featureFlags}
+                                            registrationCount={registrationCount}
+                                            favoriteCount={favoriteCount}
+                                        />
+                                    ))}
+                                </div>
                             )}
                         />
                     ) : (
