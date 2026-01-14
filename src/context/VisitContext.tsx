@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
 // L'utilisateur connecté (simulé)
 export const CURRENT_USER_ID = 999;
@@ -67,8 +67,8 @@ export const VisitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         { visitorId: 42, visitedId: CURRENT_USER_ID, timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000) },
     ]);
 
-    // Enregistrer une visite
-    const recordVisit = (visitorId: number, visitedId: number) => {
+    // Enregistrer une visite (mémoïsé pour éviter les re-renders en boucle)
+    const recordVisit = useCallback((visitorId: number, visitedId: number) => {
         // Ne pas enregistrer si on visite son propre profil
         if (visitorId === visitedId) return;
         
@@ -79,7 +79,7 @@ export const VisitProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         };
         
         setVisits(prev => [newVisit, ...prev]);
-    };
+    }, []);
 
     // Formater le temps relatif
     const formatRelativeTime = (date: Date): string => {

@@ -13,6 +13,29 @@
     "close": "Close",
     "create": "Create"
   },
+  "premium": {
+    "required": "Premium Feature",
+    "profileRequired": "Go Premium to view profiles",
+    "muteRequired": "Go Premium to mute members",
+    "unlockWithPremium": "Unlock with Premium"
+  },
+  "friends": {
+    "alreadyFriends": "Friends",
+    "requestPending": "Pending",
+    "requestSent": "Friend request sent!",
+    "dailyLimitReached": "Limit reached! Go Premium to add more friends",
+    "mustBeFriends": "You must be friends to chat",
+    "notFriendsYet": "You're not friends yet",
+    "mustBeFriendsToChat": "You must be friends to chat with this person.",
+    "sendRequest": "Send friend request",
+    "remainingToday": "{{count}} request remaining today",
+    "noMoreToday": "Come back tomorrow or go Premium",
+    "removeFriend": "Remove friend",
+    "removed": "Friend removed",
+    "requestSentWaiting": "Friend request sent",
+    "messageWaitingMutual": "Message - Waiting for mutual friendship",
+    "messageNeedFriend": "Message - Add as friend first"
+  },
   "nav": {
     "explore": "Explore",
     "messages": "Messages",
@@ -62,6 +85,11 @@
     "settings": "Chat Settings",
     "muteSounds": "Mute sounds",
     "blockNotifications": "Block notifications",
+    "muteUser": "Mute {{name}}",
+    "muteMember": "Mute notifications",
+    "unmuteMember": "Unmute notifications",
+    "memberMuted": "{{name}} is now muted",
+    "memberUnmuted": "{{name}} is no longer muted",
     "leaveGroup": "Leave group",
     "removeMember": "Remove from group",
     "addMember": "Add a member",

@@ -1,9 +1,7 @@
 import React, { CSSProperties } from 'react';
 import { Virtuoso } from 'react-virtuoso';
-import { Heart, Lock, Crown } from 'lucide-react';
+import { Heart, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
 import BlurImage from '../../BlurImage';
 import { SUGGESTIONS, Suggestion } from '../../../data/mockSuggestions';
 
@@ -14,19 +12,9 @@ interface SuggestionsTabProps {
 
 const SuggestionsTab: React.FC<SuggestionsTabProps> = ({ searchQuery, blurProfiles }) => {
     const navigate = useNavigate();
-    const { t } = useTranslation();
 
-    // Fonction pour naviguer vers un profil (avec vérification premium)
+    // Fonction pour naviguer vers un profil (toujours accessible, mais infos floutées sur le profil si non-premium)
     const navigateToProfile = (userId: number) => {
-        if (blurProfiles) {
-            toast.error(
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Crown size={18} color="#fbbf24" />
-                    <span>{t('premium.profileRequired', 'Passez Premium pour voir les profils')}</span>
-                </div>
-            );
-            return;
-        }
         navigate(`/user/${userId}`);
     };
 
@@ -62,15 +50,13 @@ const SuggestionsTab: React.FC<SuggestionsTabProps> = ({ searchQuery, blurProfil
                             boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
                             transform: `rotate(${item.rotation}deg)`,
                             marginTop: `${item.offset}px`,
-                            cursor: blurProfiles ? 'not-allowed' : 'pointer'
+                            cursor: 'pointer'
                         }}
                     >
-                        {/* Image avec blur conditionnel */}
+                        {/* Image - toujours visible, jamais floutée */}
                         <div style={{
                             width: '100%',
                             height: '100%',
-                            filter: blurProfiles ? 'blur(15px)' : 'none',
-                            transform: blurProfiles ? 'scale(1.1)' : 'none',
                             pointerEvents: 'none'
                         }}>
                             <BlurImage
@@ -79,45 +65,49 @@ const SuggestionsTab: React.FC<SuggestionsTabProps> = ({ searchQuery, blurProfil
                             />
                         </div>
 
-                        {/* Overlay Premium si profils floutés */}
+                        {/* Cadenas en haut à droite si non-premium */}
                         {blurProfiles && (
                             <div style={{
                                 position: 'absolute',
-                                top: '50%',
-                                left: '50%',
-                                transform: 'translate(-50%, -50%)',
-                                background: 'rgba(0,0,0,0.6)',
+                                top: '12px',
+                                right: '12px',
+                                background: 'rgba(0,0,0,0.5)',
                                 backdropFilter: 'blur(5px)',
-                                borderRadius: '16px',
-                                padding: '16px 20px',
+                                borderRadius: '50%',
+                                width: '32px',
+                                height: '32px',
                                 display: 'flex',
-                                flexDirection: 'column',
                                 alignItems: 'center',
-                                gap: '8px',
+                                justifyContent: 'center',
+                                border: '1px solid rgba(255,255,255,0.2)',
                                 pointerEvents: 'none'
                             }}>
-                                <Lock size={24} color="#fbbf24" />
-                                <span style={{ color: 'white', fontSize: '12px', fontWeight: '600' }}>Premium</span>
+                                <Lock size={14} color="#fbbf24" />
                             </div>
                         )}
 
-                        <div style={{
-                            position: 'absolute',
-                            top: '12px',
-                            right: '12px',
-                            background: 'rgba(255,255,255,0.2)',
-                            backdropFilter: 'blur(5px)',
-                            borderRadius: '50%',
-                            width: '32px',
-                            height: '32px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            border: '1px solid rgba(255,255,255,0.3)',
-                            pointerEvents: 'none'
-                        }}>
-                            <Heart size={16} color="white" />
-                        </div>
+                        {/* Coeur en haut à droite si premium */}
+                        {!blurProfiles && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '12px',
+                                right: '12px',
+                                background: 'rgba(255,255,255,0.2)',
+                                backdropFilter: 'blur(5px)',
+                                borderRadius: '50%',
+                                width: '32px',
+                                height: '32px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: '1px solid rgba(255,255,255,0.3)',
+                                pointerEvents: 'none'
+                            }}>
+                                <Heart size={16} color="white" />
+                            </div>
+                        )}
+
+                        {/* Nom et âge - floutés si non-premium */}
                         <div style={{
                             position: 'absolute',
                             bottom: 0,
@@ -132,7 +122,8 @@ const SuggestionsTab: React.FC<SuggestionsTabProps> = ({ searchQuery, blurProfil
                                 fontWeight: '700',
                                 fontSize: '16px',
                                 textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                                filter: blurProfiles ? 'blur(8px)' : 'none'
+                                filter: blurProfiles ? 'blur(6px)' : 'none',
+                                userSelect: 'none'
                             }}>
                                 {item.name}, {item.age}
                             </h3>

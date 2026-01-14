@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Calendar, User, Search, MessageCircle, Plus, Crown } from 'lucide-react';
-import { AnimatePresence } from 'framer-motion';
 import { Toaster } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import './index.css';
@@ -10,6 +9,7 @@ import { EventProvider } from './context/EventContext';
 import { FeatureFlagProvider, useFeatureFlags } from './context/FeatureFlagContext';
 import { VisitProvider } from './context/VisitContext';
 import { MessageProvider } from './context/MessageContext';
+import { FriendProvider } from './context/FriendContext';
 
 // Components
 import EventList from './components/EventList';
@@ -148,7 +148,7 @@ function Navigation() {
   );
 }
 
-// Wrapper to handle AnimatePresence logic which needs access to useLocation
+// Routes without AnimatePresence for stability
 function AnimatedRoutes() {
   return (
     <Routes>
@@ -188,14 +188,16 @@ function App() {
       <FeatureFlagProvider>
         <EventProvider>
           <VisitProvider>
-            <MessageProvider>
-              <Toaster position="top-center" richColors theme="system" />
-              <Router basename="/meetabit">
-                <Layout>
-                  <AnimatedRoutes />
-                </Layout>
-              </Router>
-            </MessageProvider>
+            <FriendProvider>
+              <MessageProvider>
+                <Toaster position="top-center" richColors theme="system" />
+                <Router basename="/meetabit">
+                  <Layout>
+                    <AnimatedRoutes />
+                  </Layout>
+                </Router>
+              </MessageProvider>
+            </FriendProvider>
           </VisitProvider>
         </EventProvider>
       </FeatureFlagProvider>

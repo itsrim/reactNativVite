@@ -1,10 +1,13 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Award, ShieldCheck, Heart, Calendar, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Award, ShieldCheck, Heart, Calendar, MessageCircle, Lock, Crown, UserCheck, Clock, UserMinus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import PageTransition from './PageTransition';
 import BlurImage from './BlurImage';
 import { useVisits, getUserData, CURRENT_USER_ID } from '../context/VisitContext';
+import { useFeatureFlags } from '../context/FeatureFlagContext';
+import { useFriends } from '../context/FriendContext';
 
 const BIOS = [
     "Passionné(e) de randonnée et de photographie. Toujours partant(e) pour de nouvelles aventures !",
@@ -49,41 +52,133 @@ const UserProfile: React.FC = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const { recordVisit } = useVisits();
+    const { isPremium } = useFeatureFlags();
+    const { 
+        isFriend, 
+        hasSentRequest, 
+        sendFriendRequest,
+        removeFriend,
+        canSendRequest, 
+        getRemainingRequestsToday 
+    } = useFriends();
+    
     const userId = parseInt(id || '0');
     const user = getFullUserData(userId);
+    const isAlreadyFriend = isFriend(userId);
+    const hasPendingRequest = hasSentRequest(userId);
 
     useEffect(() => {
         recordVisit(CURRENT_USER_ID, userId);
     }, [userId, recordVisit]);
 
+    const handleAddFriend = () => {
+        // Vérifier si premium
+        if (!isPremium) {
+            // Vérifier la limite journalière
+            if (!canSendRequest(false)) {
+                toast.error(
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Crown size={18} color="#fbbf24" />
+                        <span>{t('friends.dailyLimitReached', 'Limite atteinte ! Passez Premium pour ajouter plus d\'amis')}</span>
+                    </div>
+                );
+                return;
+            }
+        }
+
+        const success = sendFriendRequest(userId);
+        if (success) {
+            toast.success(t('friends.requestSent', 'Demande d\'ami envoyée !'));
+        }
+    };
+
+    const handleRemoveFriend = () => {
+        removeFriend(userId);
+        toast.info(t('friends.removed', 'Ami retiré'));
+    };
+
+    const handleMessage = () => {
+        // Il faut être amis mutuellement pour discuter
+        if (!isAlreadyFriend) {
+            toast.error(
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Lock size={18} color="#ef4444" />
+                    <span>{t('friends.mustBeFriends', 'Vous devez être amis pour discuter')}</span>
+                </div>
+            );
+            return;
+        }
+        navigate(`/chat/${userId}`);
+    };
+    
+    // Le bouton message est actif seulement si amis mutuels
+    const canMessage = isAlreadyFriend;
+
+    // Détermine si les infos doivent être floutées (non-premium)
+    const shouldBlur = !isPremium;
+
     return (
         <PageTransition>
             <div style={{ padding: '16px', paddingBottom: '96px' }}>
-                {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-                    <button 
-                        onClick={() => navigate(-1)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text)' }}
-                    >
-                        <ArrowLeft size={24} />
-                    </button>
-                    <h1 style={{ fontWeight: '700', fontSize: '20px', color: 'var(--color-text)' }}>{t('profile.title')}</h1>
-                </div>
-
                 {/* Photo et infos */}
                 <div style={{
                     position: 'relative',
-                    height: '280px',
+                    height: '320px',
                     borderRadius: '24px',
                     overflow: 'hidden',
                     marginBottom: '20px'
                 }}>
+                    {/* Photo - jamais floutée */}
                     <BlurImage src={user.image} alt={user.name} />
                     <div style={{
                         position: 'absolute',
                         inset: 0,
                         background: 'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.7) 100%)'
                     }} />
+
+                    {/* Bouton retour en haut à gauche sur la photo */}
+                    <button 
+                        onClick={() => navigate(-1)}
+                        style={{ 
+                            position: 'absolute',
+                            top: '16px',
+                            left: '16px',
+                            background: 'rgba(0,0,0,0.5)',
+                            backdropFilter: 'blur(5px)',
+                            border: 'none', 
+                            cursor: 'pointer', 
+                            color: 'white',
+                            borderRadius: '50%',
+                            width: '40px',
+                            height: '40px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 10
+                        }}
+                    >
+                        <ArrowLeft size={22} />
+                    </button>
+
+                    {/* Cadenas si non-premium */}
+                    {shouldBlur && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '16px',
+                            right: '16px',
+                            background: 'rgba(0,0,0,0.6)',
+                            backdropFilter: 'blur(5px)',
+                            borderRadius: '12px',
+                            padding: '8px 12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                        }}>
+                            <Lock size={14} color="#fbbf24" />
+                            <span style={{ color: '#fbbf24', fontSize: '12px', fontWeight: '600' }}>Premium</span>
+                        </div>
+                    )}
+
                     <div style={{
                         position: 'absolute',
                         bottom: '20px',
@@ -95,11 +190,18 @@ const UserProfile: React.FC = () => {
                             fontSize: '28px', 
                             fontWeight: '800',
                             textShadow: '0 2px 8px rgba(0,0,0,0.5)',
-                            marginBottom: '4px'
+                            marginBottom: '4px',
+                            filter: shouldBlur ? 'blur(8px)' : 'none',
+                            userSelect: shouldBlur ? 'none' : 'auto'
                         }}>
                             {user.name}, {user.age}
                         </h1>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '8px',
+                            filter: shouldBlur ? 'blur(6px)' : 'none'
+                        }}>
                             <ShieldCheck size={16} color="#22c55e" />
                             <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px' }}>
                                 {t('profile.verified')}
@@ -108,9 +210,20 @@ const UserProfile: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Bio */}
-                <div className="card" style={{ padding: '16px', marginBottom: '16px' }}>
-                    <p style={{ color: 'var(--color-text)', fontSize: '14px', lineHeight: '1.6' }}>
+                {/* Bio - floutée si non-premium */}
+                <div className="card" style={{ 
+                    padding: '16px', 
+                    marginBottom: '16px',
+                    position: 'relative',
+                    overflow: 'hidden'
+                }}>
+                    <p style={{ 
+                        color: 'var(--color-text)', 
+                        fontSize: '14px', 
+                        lineHeight: '1.6',
+                        filter: shouldBlur ? 'blur(6px)' : 'none',
+                        userSelect: shouldBlur ? 'none' : 'auto'
+                    }}>
                         {user.bio}
                     </p>
                     <div style={{ 
@@ -121,36 +234,77 @@ const UserProfile: React.FC = () => {
                         alignItems: 'center',
                         gap: '6px',
                         color: 'var(--color-text-muted)',
-                        fontSize: '12px'
+                        fontSize: '12px',
+                        filter: shouldBlur ? 'blur(4px)' : 'none'
                     }}>
                         <Calendar size={12} />
                         {t('profile.memberSince', { year: user.memberSince })}
                     </div>
+                    {shouldBlur && (
+                        <div style={{
+                            position: 'absolute',
+                            inset: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'rgba(var(--color-surface-rgb), 0.3)'
+                        }}>
+                            <div style={{
+                                background: 'var(--color-surface)',
+                                borderRadius: '12px',
+                                padding: '8px 16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                            }}>
+                                <Lock size={14} color="#fbbf24" />
+                                <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-text)' }}>
+                                    {t('premium.unlockWithPremium', 'Débloquez avec Premium')}
+                                </span>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                {/* Stats */}
-                <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+                {/* Stats - floutées si non-premium */}
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', position: 'relative' }}>
                     <div className="card" style={{ flex: 1, padding: '16px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-primary)' }}>
+                        <div style={{ 
+                            fontSize: '24px', 
+                            fontWeight: '800', 
+                            color: 'var(--color-primary)',
+                            filter: shouldBlur ? 'blur(6px)' : 'none'
+                        }}>
                             {user.reliability.toFixed(1)}
                         </div>
                         <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{t('profile.reliability')}</div>
                     </div>
                     <div className="card" style={{ flex: 1, padding: '16px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-primary)' }}>
+                        <div style={{ 
+                            fontSize: '24px', 
+                            fontWeight: '800', 
+                            color: 'var(--color-primary)',
+                            filter: shouldBlur ? 'blur(6px)' : 'none'
+                        }}>
                             {user.events}
                         </div>
                         <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{t('profile.events')}</div>
                     </div>
                     <div className="card" style={{ flex: 1, padding: '16px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--color-primary)' }}>
+                        <div style={{ 
+                            fontSize: '24px', 
+                            fontWeight: '800', 
+                            color: 'var(--color-primary)',
+                            filter: shouldBlur ? 'blur(6px)' : 'none'
+                        }}>
                             {user.friends}
                         </div>
                         <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{t('profile.friends')}</div>
                     </div>
                 </div>
 
-                {/* Badges */}
+                {/* Badges - floutés si non-premium */}
                 <h3 style={{ 
                     fontSize: '16px', 
                     fontWeight: '700', 
@@ -159,7 +313,13 @@ const UserProfile: React.FC = () => {
                 }}>
                     {t('profile.badges')}
                 </h3>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '24px' }}>
+                <div style={{ 
+                    display: 'flex', 
+                    gap: '10px', 
+                    flexWrap: 'wrap', 
+                    marginBottom: '24px',
+                    filter: shouldBlur ? 'blur(6px)' : 'none'
+                }}>
                     {user.badges.map((badge, i) => (
                         <div key={i} className="card" style={{ 
                             padding: '8px 14px', 
@@ -176,47 +336,158 @@ const UserProfile: React.FC = () => {
                 </div>
 
                 {/* Actions */}
-                <div style={{ display: 'flex', gap: '12px' }}>
-                    <button 
-                        onClick={() => navigate(`/chat/${userId}`)}
-                        style={{
-                            flex: 1,
-                            padding: '14px',
-                            borderRadius: '16px',
-                            background: 'var(--color-surface)',
-                            border: '1px solid var(--color-border)',
-                            color: 'var(--color-text)',
-                            fontSize: '15px',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px'
-                        }}
-                    >
-                        <MessageCircle size={18} />
-                        {t('profile.message')}
-                    </button>
-                    <button style={{
-                        flex: 1,
-                        padding: '14px',
-                        borderRadius: '16px',
-                        background: 'linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)',
-                        color: 'white',
-                        border: 'none',
-                        fontSize: '15px',
-                        fontWeight: '700',
-                        cursor: 'pointer',
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {/* Bouton Message */}
+                    {isAlreadyFriend ? (
+                        // Amis mutuels → bouton actif
+                        <button 
+                            type="button"
+                            onClick={handleMessage}
+                            style={{
+                                width: '100%',
+                                padding: '14px',
+                                borderRadius: '16px',
+                                background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                                border: 'none',
+                                color: 'white',
+                                fontSize: '15px',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px'
+                            }}
+                        >
+                            <MessageCircle size={18} />
+                            {t('profile.message')}
+                        </button>
+                    ) : (
+                        // Pas amis → bouton désactivé avec explication
+                        <button 
+                            disabled
+                            style={{
+                                width: '100%',
+                                padding: '14px',
+                                borderRadius: '16px',
+                                background: 'rgba(0,0,0,0.05)',
+                                border: '1px solid var(--color-border)',
+                                color: 'var(--color-text-muted)',
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                cursor: 'not-allowed',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                opacity: 0.7
+                            }}
+                        >
+                            <Clock size={16} />
+                            {hasPendingRequest 
+                                ? t('friends.messageWaitingMutual', 'Message - En attente d\'amitié mutuelle')
+                                : t('friends.messageNeedFriend', 'Message - Ajoutez en ami d\'abord')
+                            }
+                        </button>
+                    )}
+
+                    {/* Bouton Ami */}
+                    {isAlreadyFriend ? (
+                        // Déjà amis → bouton retirer
+                        <button 
+                            onClick={handleRemoveFriend}
+                            style={{
+                                width: '100%',
+                                padding: '14px',
+                                borderRadius: '16px',
+                                background: 'var(--color-surface)',
+                                color: '#ef4444',
+                                border: '1px solid #ef4444',
+                                fontSize: '15px',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px'
+                            }}>
+                            <UserMinus size={18} />
+                            {t('friends.removeFriend', 'Retirer des amis')}
+                        </button>
+                    ) : hasPendingRequest ? (
+                        // Demande envoyée → en attente
+                        <button 
+                            disabled
+                            style={{
+                                width: '100%',
+                                padding: '14px',
+                                borderRadius: '16px',
+                                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                color: 'white',
+                                border: 'none',
+                                fontSize: '15px',
+                                fontWeight: '700',
+                                cursor: 'default',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px'
+                            }}>
+                            <Clock size={18} />
+                            {t('friends.requestSentWaiting', 'Demande d\'ami envoyée')}
+                        </button>
+                    ) : (
+                        <button 
+                            onClick={handleAddFriend}
+                            style={{
+                                width: '100%',
+                                padding: '14px',
+                                borderRadius: '16px',
+                                background: isPremium || canSendRequest(false) 
+                                    ? 'linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)'
+                                    : 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)',
+                                color: 'white',
+                                border: 'none',
+                                fontSize: '15px',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                position: 'relative'
+                            }}
+                        >
+                            <Heart size={18} />
+                            {t('profile.addFriend')}
+                            {!isPremium && !canSendRequest(false) && (
+                                <Crown size={14} color="#fbbf24" style={{ position: 'absolute', top: 8, right: 8 }} />
+                            )}
+                        </button>
+                    )}
+                </div>
+
+                {/* Indication limite journalière pour non-premium */}
+                {!isPremium && !isAlreadyFriend && !hasPendingRequest && (
+                    <div style={{
+                        marginTop: '12px',
+                        padding: '10px 16px',
+                        background: 'rgba(251, 191, 36, 0.1)',
+                        borderRadius: '12px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '8px'
                     }}>
-                        <Heart size={18} />
-                        {t('profile.addFriend')}
-                    </button>
-                </div>
+                        <Crown size={14} color="#fbbf24" />
+                        <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                            {getRemainingRequestsToday(false) > 0 
+                                ? t('friends.remainingToday', { count: getRemainingRequestsToday(false) })
+                                : t('friends.noMoreToday', 'Revenez demain ou passez Premium')
+                            }
+                        </span>
+                    </div>
+                )}
             </div>
         </PageTransition>
     );

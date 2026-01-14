@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Volume2, VolumeX, Bell, BellOff, UserMinus, LogOut, UserPlus, Crown } from 'lucide-react';
+import { Volume2, VolumeX, Bell, BellOff, UserMinus, LogOut, UserPlus, Crown, UserX, User, Lock, Heart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import BlurImage from './BlurImage';
@@ -9,6 +9,7 @@ import { ChatHeader, ChatMessageBubble, ChatInput } from './Chat/index';
 import { useMessages, SocialGroup } from '../context/MessageContext';
 import { getUserData, CURRENT_USER_ID, CURRENT_USER } from '../context/VisitContext';
 import { useFeatureFlags } from '../context/FeatureFlagContext';
+import { useFriends } from '../context/FriendContext';
 import { GroupAvatar } from './Social/GroupAvatar';
 import { SUGGESTIONS } from '../data/mockSuggestions';
 import { toast } from 'sonner';
@@ -17,13 +18,46 @@ const Chat: React.FC = () => {
     const { id = '' } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
-    const { getConversationMessages, sendMessage, markAsRead, chatSettings, updateChatSettings, leaveGroup, removeMember, groups, addMember } = useMessages();
+    const { getConversationMessages, sendMessage, markAsRead, chatSettings, updateChatSettings, toggleMuteUser, isUserMuted, leaveGroup, removeMember, groups, addMember } = useMessages();
     const { isPremium } = useFeatureFlags();
+    const { isFriend, sendFriendRequest, canSendRequest } = useFriends();
     const [newMessage, setNewMessage] = useState('');
     const [showSettings, setShowSettings] = useState(false);
     const [isConfirmingLeave, setIsConfirmingLeave] = useState(false);
     const [showAddMember, setShowAddMember] = useState(false);
+    const [mutedMembers, setMutedMembers] = useState<string[]>([]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const isGroup = id.startsWith('group-');
+    const numericId = parseInt(isGroup ? id.replace('group-', '') : id);
+    
+    // Vérifier si c'est un ami (pour les conversations privées)
+    // Il faut être amis mutuellement pour discuter (même Premium)
+    const isUserFriend = isGroup ? true : isFriend(numericId);
+
+    const toggleMuteMember = (memberName: string) => {
+        if (!isPremium) {
+            toast.error(
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Crown size={18} color="#fbbf24" />
+                    <span>{t('premium.muteRequired', 'Passez Premium pour muter les membres')}</span>
+                </div>
+            );
+            return;
+        }
+        setMutedMembers(prev => 
+            prev.includes(memberName) 
+                ? prev.filter(m => m !== memberName)
+                : [...prev, memberName]
+        );
+        toast.success(
+            mutedMembers.includes(memberName) 
+                ? t('chat.memberUnmuted', { name: memberName })
+                : t('chat.memberMuted', { name: memberName })
+        );
+    };
+
+    const isMemberMuted = (memberName: string) => mutedMembers.includes(memberName);
 
     const navigateToProfile = (userId: number) => {
         if (!isPremium) {
@@ -38,8 +72,6 @@ const Chat: React.FC = () => {
         navigate(`/user/${userId}`);
     };
 
-    const isGroup = id.startsWith('group-');
-    const numericId = parseInt(isGroup ? id.replace('group-', '') : id);
     const otherUser = isGroup ? null : getUserData(numericId);
     const groupData = isGroup ? groups.find((g: SocialGroup) => g.id === numericId) : null;
     const messages = getConversationMessages(numericId);
@@ -57,6 +89,133 @@ const Chat: React.FC = () => {
     const formatTime = (date: Date): string => {
         return date.toLocaleTimeString(i18n.language === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' });
     };
+
+    const handleSendFriendRequest = () => {
+        if (!isPremium && !canSendRequest(false)) {
+            toast.error(
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Crown size={18} color="#fbbf24" />
+                    <span>{t('friends.dailyLimitReached', 'Limite atteinte !')}</span>
+                </div>
+            );
+            return;
+        }
+        sendFriendRequest(numericId);
+        toast.success(t('friends.requestSent', 'Demande d\'ami envoyée !'));
+    };
+
+    // Si conversation privée et pas ami, afficher un écran de blocage
+    if (!isGroup && !isUserFriend) {
+    return (
+        <PageTransition>
+                <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--color-background)' }}>
+                    {/* Header simplifié */}
+                <div style={{
+                    padding: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                        gap: '12px',
+                    borderBottom: '1px solid var(--color-border)'
+                }}>
+                    <button
+                        onClick={() => navigate(-1)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text)' }}
+                    >
+                            <Lock size={24} />
+                    </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                            <div style={{ width: '44px', height: '44px', borderRadius: '50%', overflow: 'hidden' }}>
+                                <BlurImage src={otherUser?.image || ''} alt={otherUser?.name || ''} />
+                            </div>
+                            <div>
+                                <h2 style={{ fontWeight: '700', fontSize: '16px', color: 'var(--color-text)' }}>
+                                    {otherUser?.name}, {otherUser?.age}
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Contenu bloqué */}
+                    <div style={{
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '32px',
+                        gap: '24px',
+                        textAlign: 'center'
+                    }}>
+                        <div style={{
+                            width: '100px',
+                            height: '100px',
+                            borderRadius: '50%',
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            <Lock size={40} color="#ef4444" />
+                        </div>
+                        
+                        <div>
+                            <h2 style={{ 
+                                fontSize: '20px', 
+                                fontWeight: '700', 
+                                color: 'var(--color-text)',
+                                marginBottom: '8px'
+                            }}>
+                                {t('friends.notFriendsYet', 'Vous n\'êtes pas encore amis')}
+                            </h2>
+                            <p style={{ 
+                                fontSize: '14px', 
+                                color: 'var(--color-text-muted)',
+                                lineHeight: '1.5'
+                            }}>
+                                {t('friends.mustBeFriendsToChat', 'Vous devez être amis pour pouvoir discuter avec cette personne.')}
+                            </p>
+                        </div>
+
+                        <button
+                            onClick={handleSendFriendRequest}
+                            style={{
+                                padding: '14px 32px',
+                                borderRadius: '16px',
+                                background: 'linear-gradient(135deg, #ec4899 0%, #f43f5e 100%)',
+                                color: 'white',
+                                border: 'none',
+                                fontSize: '15px',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}
+                        >
+                            <Heart size={18} />
+                            {t('friends.sendRequest', 'Envoyer une demande d\'ami')}
+                        </button>
+
+                        <button
+                            onClick={() => navigate(-1)}
+                            style={{
+                                padding: '12px 24px',
+                                borderRadius: '12px',
+                                background: 'transparent',
+                                color: 'var(--color-text-muted)',
+                                border: '1px solid var(--color-border)',
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {t('common.back', 'Retour')}
+                        </button>
+                    </div>
+                </div>
+            </PageTransition>
+        );
+    }
 
     return (
         <PageTransition>
@@ -80,9 +239,16 @@ const Chat: React.FC = () => {
                     {showSettings && (
                         <SettingsMenu
                             isGroup={isGroup}
+                            userId={numericId}
+                            userName={otherUser?.name || ''}
                             groupData={groupData}
                             chatSettings={chatSettings}
                             updateChatSettings={updateChatSettings}
+                            isUserMuted={isUserMuted(numericId)}
+                            onToggleMuteUser={() => toggleMuteUser(numericId)}
+                            isPremium={isPremium}
+                            isMemberMuted={isMemberMuted}
+                            toggleMuteMember={toggleMuteMember}
                             showAddMember={showAddMember}
                             setShowAddMember={setShowAddMember}
                             isConfirmingLeave={isConfirmingLeave}
@@ -128,9 +294,16 @@ const Chat: React.FC = () => {
 // Settings Menu Component
 interface SettingsMenuProps {
     isGroup: boolean;
+    userId: number;
+    userName: string;
     groupData: SocialGroup | null | undefined;
     chatSettings: { muteSounds: boolean; blockNotifications: boolean };
     updateChatSettings: (settings: Partial<{ muteSounds: boolean; blockNotifications: boolean }>) => void;
+    isUserMuted: boolean;
+    onToggleMuteUser: () => void;
+    isPremium: boolean;
+    isMemberMuted: (memberName: string) => boolean;
+    toggleMuteMember: (memberName: string) => void;
     showAddMember: boolean;
     setShowAddMember: (show: boolean) => void;
     isConfirmingLeave: boolean;
@@ -139,11 +312,12 @@ interface SettingsMenuProps {
     removeMember: (groupId: number, name: string) => void;
     leaveGroup: (groupId: number) => void;
     navigate: (path: number) => void;
-    t: (key: string) => string;
+    t: (key: string, options?: Record<string, string>) => string;
 }
 
 const SettingsMenu: React.FC<SettingsMenuProps> = ({
-    isGroup, groupData, chatSettings, updateChatSettings,
+    isGroup, userId, userName, groupData, chatSettings, updateChatSettings,
+    isUserMuted, onToggleMuteUser, isPremium, isMemberMuted, toggleMuteMember,
     showAddMember, setShowAddMember, isConfirmingLeave, setIsConfirmingLeave,
     addMember, removeMember, leaveGroup, navigate, t
 }) => (
@@ -176,12 +350,25 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({
             label={t('chat.blockNotifications')}
             isActive={chatSettings.blockNotifications}
             onClick={() => updateChatSettings({ blockNotifications: !chatSettings.blockNotifications })}
-            style={{ marginBottom: isGroup ? '8px' : '0' }}
         />
+
+        {/* Mute utilisateur - uniquement pour les conversations privées */}
+        {!isGroup && (
+            <ToggleRow
+                icon={isUserMuted ? <UserX size={18} color="#ef4444" /> : <User size={18} color="var(--color-text-muted)" />}
+                label={t('chat.muteUser', { name: userName.split(',')[0] || 'cet utilisateur' })}
+                isActive={isUserMuted}
+                onClick={onToggleMuteUser}
+                style={{ marginBottom: '0' }}
+            />
+        )}
 
         {isGroup && groupData && (
             <GroupManagement
                 groupData={groupData}
+                isPremium={isPremium}
+                isMemberMuted={isMemberMuted}
+                toggleMuteMember={toggleMuteMember}
                 showAddMember={showAddMember}
                 setShowAddMember={setShowAddMember}
                 isConfirmingLeave={isConfirmingLeave}
@@ -233,6 +420,9 @@ const ToggleRow: React.FC<{
 // Group Management Component
 const GroupManagement: React.FC<{
     groupData: SocialGroup;
+    isPremium: boolean;
+    isMemberMuted: (memberName: string) => boolean;
+    toggleMuteMember: (memberName: string) => void;
     showAddMember: boolean;
     setShowAddMember: (show: boolean) => void;
     isConfirmingLeave: boolean;
@@ -241,8 +431,8 @@ const GroupManagement: React.FC<{
     removeMember: (groupId: number, name: string) => void;
     leaveGroup: (groupId: number) => void;
     navigate: (path: number) => void;
-    t: (key: string) => string;
-}> = ({ groupData, showAddMember, setShowAddMember, isConfirmingLeave, setIsConfirmingLeave, addMember, removeMember, leaveGroup, navigate, t }) => (
+    t: (key: string, options?: Record<string, string>) => string;
+}> = ({ groupData, isPremium, isMemberMuted, toggleMuteMember, showAddMember, setShowAddMember, isConfirmingLeave, setIsConfirmingLeave, addMember, removeMember, leaveGroup, navigate, t }) => (
                                 <>
                                     <div style={{ padding: '8px 12px', borderTop: '1px solid var(--color-border)', marginTop: '8px', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
@@ -290,9 +480,34 @@ const GroupManagement: React.FC<{
                         <span style={{ fontSize: '14px', color: 'var(--color-text)', fontWeight: member === 'Moi' ? '700' : '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member}</span>
                                                 </div>
                                                 {member !== 'Moi' && (
-                        <button onClick={() => removeMember(groupData.id, member)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', opacity: 0.7, padding: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            {/* Bouton Mute - Premium */}
+                                                    <button
+                                onClick={() => toggleMuteMember(member)} 
+                                style={{ 
+                                    background: 'none', 
+                                    border: 'none', 
+                                    cursor: 'pointer', 
+                                    padding: '4px',
+                                    position: 'relative',
+                                    opacity: isPremium ? 1 : 0.5
+                                }}
+                                title={isPremium ? (isMemberMuted(member) ? t('chat.unmuteMember') : t('chat.muteMember')) : t('premium.required')}
+                            >
+                                {isMemberMuted(member) ? (
+                                    <BellOff size={16} color="#ef4444" />
+                                ) : (
+                                    <Bell size={16} color="var(--color-text-muted)" />
+                                )}
+                                {!isPremium && (
+                                    <Crown size={8} color="#fbbf24" style={{ position: 'absolute', top: 0, right: 0 }} />
+                                )}
+                            </button>
+                            {/* Bouton Remove */}
+                            <button onClick={() => removeMember(groupData.id, member)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', opacity: 0.7, padding: '4px' }}>
                                                         <UserMinus size={16} />
                                                     </button>
+                        </div>
                                                 )}
                                             </div>
                                         ))}

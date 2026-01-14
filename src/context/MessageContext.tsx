@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 import { CURRENT_USER_ID, getUserData, CURRENT_USER } from './VisitContext';
 import { SUGGESTIONS } from '../data/mockSuggestions';
 
@@ -46,6 +46,9 @@ interface MessageContextType {
     getTotalUnread: () => number;
     chatSettings: ChatSettings;
     updateChatSettings: (settings: Partial<ChatSettings>) => void;
+    mutedUserIds: number[];
+    toggleMuteUser: (userId: number) => void;
+    isUserMuted: (userId: number) => boolean;
     groups: SocialGroup[];
     kickedGroupIds: number[];
     leaveGroup: (groupId: number) => void;
@@ -77,7 +80,6 @@ export const MessageProvider: React.FC<{ children: ReactNode }> = ({ children })
         { id: 9, senderId: 42, receiverId: CURRENT_USER_ID, content: "Ça fait longtemps ! Comment tu vas ?", timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), read: true },
     ]);
 
-    const [nextId, setNextId] = useState(10);
     const [groups, setGroups] = useState<SocialGroup[]>([
         { id: 1, name: 'Team Padel', members: ['Lucas', 'Théo', 'Marie', 'Moi'], images: ['https://i.pravatar.cc/150?img=1', 'https://i.pravatar.cc/150?img=2', 'https://i.pravatar.cc/150?img=3'], msg: 2, lastMessage: "On joue demain ?", lastMessageDate: new Date(Date.now() - 15 * 60 * 1000) },
         { id: 2, name: 'Amis Pro', members: ['Sophie', 'Marc', 'Moi'], images: ['https://i.pravatar.cc/150?img=5', 'https://i.pravatar.cc/150?img=6'], msg: 0, lastMessage: "Le compte rendu est prêt.", lastMessageDate: new Date(Date.now() - 2 * 60 * 60 * 1000) },
@@ -90,31 +92,32 @@ export const MessageProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     const [kickedGroupIds, setKickedGroupIds] = useState<number[]>([]);
 
-    const leaveGroup = (groupId: number) => {
-        setGroups(prev => prev.reduce<SocialGroup[]>((acc, g) => {
-            if (g.id === groupId) {
-                if (g.eventId) {
-                    // Si lié à un événement, on reste dans l'array mais on n'est plus membre
-                    acc.push({
-                        ...g,
-                        members: g.members.filter(m => m !== 'Moi'),
-                        images: g.images.filter(img => img !== CURRENT_USER.image)
-                    });
+    const leaveGroup = useCallback((groupId: number) => {
+        setGroups(prev => {
+            const group = prev.find(g => g.id === groupId);
+            const result = prev.reduce<SocialGroup[]>((acc, g) => {
+                if (g.id === groupId) {
+                    if (g.eventId) {
+                        acc.push({
+                            ...g,
+                            members: g.members.filter(m => m !== 'Moi'),
+                            images: g.images.filter(img => img !== CURRENT_USER.image)
+                        });
+                    }
+                } else {
+                    acc.push(g);
                 }
-                // Sinon on le supprime (acc.filter sémantique)
-            } else {
-                acc.push(g);
+                return acc;
+            }, []);
+            
+            if (group?.eventId) {
+                setKickedGroupIds(prevKicked => [...prevKicked, groupId]);
             }
-            return acc;
-        }, []));
+            return result;
+        });
+    }, []);
 
-        const group = groups.find(g => g.id === groupId);
-        if (group?.eventId) {
-            setKickedGroupIds(prev => [...prev, groupId]);
-        }
-    };
-
-    const joinGroup = (groupId: number) => {
+    const joinGroup = useCallback((groupId: number) => {
         if (kickedGroupIds.includes(groupId)) return;
 
         setGroups(prev => prev.map(g => {
@@ -127,16 +130,15 @@ export const MessageProvider: React.FC<{ children: ReactNode }> = ({ children })
             }
             return g;
         }));
-    };
+    }, [kickedGroupIds]);
 
-    const isKicked = (groupId: number) => kickedGroupIds.includes(groupId);
-    const addMember = (groupId: number, memberName: string) => {
+    const isKicked = useCallback((groupId: number) => kickedGroupIds.includes(groupId), [kickedGroupIds]);
+
+    const addMember = useCallback((groupId: number, memberName: string) => {
         setGroups(prev => prev.map(g => {
             if (g.id === groupId) {
-                // Éviter les doublons de membres
                 if (g.members.includes(memberName)) return g;
 
-                // Trouver l'image du membre
                 const friend = SUGGESTIONS.find(f => f.name === memberName);
                 const memberImage = friend ? friend.image : (memberName === 'Moi' ? CURRENT_USER.image : `https://i.pravatar.cc/100?u=${memberName}`);
 
@@ -148,9 +150,9 @@ export const MessageProvider: React.FC<{ children: ReactNode }> = ({ children })
             }
             return g;
         }));
-    };
+    }, []);
 
-    const removeMember = (groupId: number, memberName: string) => {
+    const removeMember = useCallback((groupId: number, memberName: string) => {
         setGroups(prev => prev.map(g => {
             if (g.id === groupId) {
                 const memberIndex = g.members.indexOf(memberName);
@@ -158,7 +160,6 @@ export const MessageProvider: React.FC<{ children: ReactNode }> = ({ children })
 
                 const newMembers = g.members.filter(m => m !== memberName);
                 const newImages = [...g.images];
-                // On retire l'image correspondant à l'index du membre (si elle existe)
                 if (memberIndex < g.images.length) {
                     newImages.splice(memberIndex, 1);
                 }
@@ -167,9 +168,9 @@ export const MessageProvider: React.FC<{ children: ReactNode }> = ({ children })
             }
             return g;
         }));
-    };
+    }, []);
 
-    const createGroup = (name: string, eventId?: number): number => {
+    const createGroup = useCallback((name: string, eventId?: number): number => {
         const id = Date.now();
         const newGroup: SocialGroup = {
             id,
@@ -183,34 +184,51 @@ export const MessageProvider: React.FC<{ children: ReactNode }> = ({ children })
         };
         setGroups(prev => [newGroup, ...prev]);
         return id;
-    };
+    }, []);
 
-    const simulateMessage = (groupId: number) => {
+    const simulateMessage = useCallback((groupId: number) => {
         setGroups(prev => prev.map(g =>
             g.id === groupId ? { ...g, msg: (g.msg || 0) + 1, lastMessage: "Nouveau message !" } : g
         ));
-    };
+    }, []);
     const [chatSettings, setChatSettings] = useState<ChatSettings>({
         muteSounds: false,
         blockNotifications: false
     });
 
-    const updateChatSettings = (newSettings: Partial<ChatSettings>) => {
-        setChatSettings(prev => ({ ...prev, ...newSettings }));
-    };
+    // Utilisateurs dont les notifications sont mutées
+    const [mutedUserIds, setMutedUserIds] = useState<number[]>([]);
 
-    // Envoyer un message
-    const sendMessage = (receiverId: number, content: string) => {
-        const newMessage: Message = {
-            id: nextId,
-            senderId: CURRENT_USER_ID,
-            receiverId,
-            content,
-            timestamp: new Date(),
-            read: true
-        };
-        setMessages(prev => [...prev, newMessage]);
-        setNextId(prev => prev + 1);
+    const toggleMuteUser = useCallback((userId: number) => {
+        setMutedUserIds(prev => 
+            prev.includes(userId) 
+                ? prev.filter(id => id !== userId)
+                : [...prev, userId]
+        );
+    }, []);
+
+    const isUserMuted = useCallback((userId: number): boolean => {
+        return mutedUserIds.includes(userId);
+    }, [mutedUserIds]);
+
+    const updateChatSettings = useCallback((newSettings: Partial<ChatSettings>) => {
+        setChatSettings(prev => ({ ...prev, ...newSettings }));
+    }, []);
+
+    // Envoyer un message (mémoïsé)
+    const sendMessage = useCallback((receiverId: number, content: string) => {
+        setMessages(prev => {
+            const newId = prev.length + 1;
+            const newMessage: Message = {
+                id: newId,
+                senderId: CURRENT_USER_ID,
+                receiverId,
+                content,
+                timestamp: new Date(),
+                read: true
+            };
+            return [...prev, newMessage];
+        });
 
         // Simuler une réponse automatique après 1-3 secondes
         setTimeout(() => {
@@ -235,7 +253,7 @@ export const MessageProvider: React.FC<{ children: ReactNode }> = ({ children })
                 read: false
             }]);
         }, 1000 + Math.random() * 2000);
-    };
+    }, []);
 
     // Formater le temps relatif
     const formatRelativeTime = (date: Date): string => {
@@ -253,8 +271,8 @@ export const MessageProvider: React.FC<{ children: ReactNode }> = ({ children })
         return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
     };
 
-    // Obtenir la liste des conversations
-    const getConversations = (): Conversation[] => {
+    // Obtenir la liste des conversations (mémoïsé)
+    const getConversations = useCallback((): Conversation[] => {
         const conversationMap = new Map<number, { messages: Message[]; lastTime: Date }>();
 
         messages.forEach(msg => {
@@ -290,52 +308,79 @@ export const MessageProvider: React.FC<{ children: ReactNode }> = ({ children })
         });
 
         return conversations.sort((a, b) => b.lastMessageTime.getTime() - a.lastMessageTime.getTime());
-    };
+    }, [messages]);
 
-    // Obtenir les messages d'une conversation
-    const getConversationMessages = (otherId: number): Message[] => {
+    // Obtenir les messages d'une conversation (mémoïsé)
+    const getConversationMessages = useCallback((otherId: number): Message[] => {
         return messages
             .filter(m =>
                 (m.senderId === CURRENT_USER_ID && m.receiverId === otherId) ||
                 (m.senderId === otherId && m.receiverId === CURRENT_USER_ID)
             )
             .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-    };
+    }, [messages]);
 
-    // Marquer les messages comme lus
-    const markAsRead = (otherId: number) => {
+    // Marquer les messages comme lus (mémoïsé pour éviter les boucles infinies)
+    const markAsRead = useCallback((otherId: number) => {
         setMessages(prev => prev.map(msg => {
             if (msg.senderId === otherId && msg.receiverId === CURRENT_USER_ID && !msg.read) {
                 return { ...msg, read: true };
             }
             return msg;
         }));
-    };
+    }, []);
 
-    // Obtenir le nombre total de messages non lus
-    const getTotalUnread = (): number => {
+    // Obtenir le nombre total de messages non lus (mémoïsé)
+    const getTotalUnread = useCallback((): number => {
         return messages.filter(m => m.receiverId === CURRENT_USER_ID && !m.read).length;
-    };
+    }, [messages]);
+
+    const contextValue = useMemo(() => ({
+        messages,
+        sendMessage,
+        getConversations,
+        getConversationMessages,
+        markAsRead,
+        getTotalUnread,
+        chatSettings,
+        updateChatSettings,
+        mutedUserIds,
+        toggleMuteUser,
+        isUserMuted,
+        groups,
+        kickedGroupIds,
+        leaveGroup,
+        removeMember,
+        addMember,
+        createGroup,
+        joinGroup,
+        isKicked,
+        simulateMessage
+    }), [
+        messages,
+        sendMessage,
+        getConversations,
+        getConversationMessages,
+        markAsRead,
+        getTotalUnread,
+        chatSettings,
+        updateChatSettings,
+        mutedUserIds,
+        toggleMuteUser,
+        isUserMuted,
+        groups,
+        kickedGroupIds,
+        leaveGroup,
+        removeMember,
+        addMember,
+        createGroup,
+        joinGroup,
+        isKicked,
+        simulateMessage
+    ]);
 
     return (
-        <MessageContext.Provider value={{
-            messages,
-            sendMessage,
-            getConversations,
-            getConversationMessages,
-            markAsRead,
-            getTotalUnread,
-            chatSettings,
-            updateChatSettings,
-            groups,
-            kickedGroupIds,
-            leaveGroup,
-            removeMember,
-            addMember,
-            createGroup,
-            joinGroup,
-            isKicked
-        }}>
+        <MessageContext.Provider value={contextValue}>
             {children}
         </MessageContext.Provider>
     );

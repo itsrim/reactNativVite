@@ -13,6 +13,29 @@
     "close": "Fermer",
     "create": "Créer"
   },
+  "premium": {
+    "required": "Fonctionnalité Premium",
+    "profileRequired": "Passez Premium pour voir les profils",
+    "muteRequired": "Passez Premium pour muter les membres",
+    "unlockWithPremium": "Débloquez avec Premium"
+  },
+  "friends": {
+    "alreadyFriends": "Amis",
+    "requestPending": "En attente",
+    "requestSent": "Demande d'ami envoyée !",
+    "dailyLimitReached": "Limite atteinte ! Passez Premium pour ajouter plus d'amis",
+    "mustBeFriends": "Vous devez être amis pour discuter",
+    "notFriendsYet": "Vous n'êtes pas encore amis",
+    "mustBeFriendsToChat": "Vous devez être amis pour pouvoir discuter avec cette personne.",
+    "sendRequest": "Envoyer une demande d'ami",
+    "remainingToday": "{{count}} demande restante aujourd'hui",
+    "noMoreToday": "Revenez demain ou passez Premium",
+    "removeFriend": "Retirer des amis",
+    "removed": "Ami retiré",
+    "requestSentWaiting": "Demande d'ami envoyée",
+    "messageWaitingMutual": "Message - En attente d'amitié mutuelle",
+    "messageNeedFriend": "Message - Ajoutez en ami d'abord"
+  },
   "nav": {
     "explore": "Explorer",
     "messages": "Messages",
@@ -62,6 +85,11 @@
     "settings": "Paramètres de discussion",
     "muteSounds": "Couper les sons",
     "blockNotifications": "Bloquer les notifications",
+    "muteUser": "Muter {{name}}",
+    "muteMember": "Muter les notifs",
+    "unmuteMember": "Réactiver les notifs",
+    "memberMuted": "{{name}} est maintenant muté",
+    "memberUnmuted": "{{name}} n'est plus muté",
     "leaveGroup": "Sortir du groupe",
     "removeMember": "Retirer du groupe",
     "addMember": "Ajouter un membre",
